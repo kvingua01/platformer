@@ -1,9 +1,35 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Schoology Platformer</title><link rel="stylesheet" href="style.css"></head>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Schoology Platformer</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='16' fill='%230673b7'/%3E%3Ctext x='9' y='24' fill='white' font-size='26'%3Es%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
 <body>
-<header><a class="brand" href="./"><span class="brand-icon">s</span>schoology<span class="edition">PLATFORMER</span></a><nav aria-label="Game levels"><button data-level="0">Courses</button><button data-level="1">Assignments</button><button data-level="2">Grades</button><button data-level="3">Calendar</button></nav><div class="profile"><span>?</span><span class="avatar">JD</span><b>Jamie Davis</b><span>⌄</span></div></header>
-<div class="app"><aside><div class="school"><span class="school-icon">N</span><div>Northwood High School<small>STUDENT WORKSPACE</small></div></div><div class="side-label">YOUR WORKSPACE</div><button class="side-link selected" id="overview">▦ <span>Platformer overview</span></button><button class="side-link" id="help">ⓘ <span>How to play</span></button><div class="journey"><div class="side-label">YOUR JOURNEY</div><ol id="journey"></ol></div><div class="side-bottom"><span class="online"></span> All systems ready<small>A little break between classes.</small></div></aside>
-<main><div class="breadcrumbs">Northwood High School <span>›</span> Student workspace <span>›</span> <b>Platformer</b></div><div class="page-title"><div><div class="eyebrow">A DIFFERENT KIND OF COURSEWORK</div><h1>Schoology Platformer<span class="beta">PLAY</span></h1><p>Small cursor. Big school day. Find your way to the next page.</p></div><button class="outline" id="pause">Ⅱ <span>Pause</span><kbd>Esc</kbd></button></div>
-<section class="game-shell" aria-label="Platformer game"><div class="game-toolbar"><div><span class="level-tag" id="level-tag">01</span><b id="level-title">Courses</b><span class="difficulty" id="difficulty">Easy</span></div><div class="stats"><span id="checkpoint-stat">⚑ 0 / 3 checkpoints</span><span id="fall-stat">↻ 0 falls</span></div></div><div id="viewport" tabindex="0" aria-label="Game area. A and D to move, Space to jump, Escape to pause."><div id="scene"><div class="scene-heading"><span id="scene-icon">▦</span><div><h2 id="scene-title">My Courses</h2><p id="scene-subtitle">2026–2027 school year · All courses</p></div><span class="scene-sort">▦ &nbsp; ≡ &nbsp; ···</span></div><div class="world-watermark">Your next class is just a jump away.</div><div id="world"></div><div id="player"><svg viewBox="0 0 40 48" aria-hidden="true"><path class="foot left" d="M12 37v7H6"/><path class="foot right" d="M25 37v7h6"/><path d="M6 3L33 24l-13 2-6 12z" fill="white" stroke="#203952" stroke-width="2.6" stroke-linejoin="round"/><ellipse cx="14" cy="20" rx="2" ry="3" fill="#203952"/><ellipse cx="22" cy="20" rx="2" ry="3" fill="#203952"/></svg><span class="you-label">YOU</span></div><div id="particles"></div></div><div id="overlay"></div><div class="edge-fade"></div></div><div class="game-footer"><span><span class="live-dot"></span><b id="hint">Your school day, reimagined.</b></span><span>Reach the <b>Next Page →</b> button</span></div></section>
-<div class="bottom-row"><div class="controls"><span><kbd>A</kbd><kbd>D</kbd> or <kbd>←</kbd><kbd>→</kbd> Move</span><span><kbd>Space</kbd> Jump</span><span><kbd>R</kbd> Restart level</span><span><kbd>Esc</kbd> Pause</span></div><span class="save-note">⚑ Checkpoints save your place</span></div><div class="note"><span>✦</span><p><b>Take the scenic route.</b> Course cards, assignments, and calendar dates are your stepping stones. No enemies. No deadlines. Just the next jump.</p><span class="note-number">4 levels · 1 school day</span></div><footer>Made for a little after-class adventure.<span>Unofficial fan-made game · No login required</span></footer></main></div>
-<script type="module" src="game.js"></script></body></html>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="Schoology home"><span class="brand-mark">s</span>schoology</a>
+    <nav aria-label="Schoology navigation">
+      <button id="courses-nav">COURSES <span>▾</span></button><button id="groups-nav">GROUPS <span>▾</span></button><button id="resources-nav">RESOURCES <span>▾</span></button><button data-level="2">GRADES</button>
+    </nav>
+    <div class="header-tools" id="header-tools"></div>
+    <button class="user-menu" id="user-menu"><span class="avatar">JD</span> Jamie Davis <span>⌄</span></button>
+    <div id="nav-popover" hidden></div>
+  </header>
+  <div id="viewport" tabindex="0" aria-label="Schoology Platformer. A and D to move, Space to jump, Escape to pause.">
+    <div id="scene">
+      <div id="world"></div>
+      <div id="player"><svg viewBox="0 0 40 48" aria-hidden="true"><path class="foot left" d="M12 37v7H6"/><path class="foot right" d="M25 37v7h6"/><path d="M6 3L33 24l-13 2-6 12z" fill="white" stroke="#203952" stroke-width="2.6" stroke-linejoin="round"/><ellipse cx="14" cy="20" rx="2" ry="3" fill="#203952"/><ellipse cx="22" cy="20" rx="2" ry="3" fill="#203952"/></svg><span class="you-label">YOU</span></div>
+      <div id="particles"></div>
+    </div>
+    <div id="overlay"></div>
+  </div>
+  <footer class="game-bar">
+    <div class="game-label"><svg class="cursor-mini" viewBox="0 0 20 24" aria-hidden="true"><path d="M3 2v18l5-5 4 7 3-2-4-7h7z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg><b>Schoology Platformer</b><span id="level-title">Courses</span><span id="difficulty">Easy</span></div>
+    <div class="game-stats"><span id="checkpoint-stat"></span><span id="fall-stat"></span></div>
+    <div class="game-controls"><span><kbd>A</kbd><kbd>D</kbd> Move</span><span><kbd>Space</kbd> Jump</span><button id="help">Help</button><button id="pause"><svg class="pause-icon" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 2v8M9 2v8" stroke="currentColor" stroke-width="2"/></svg> <span>Pause</span> <kbd>Esc</kbd></button></div>
+  </footer>
+  <div class="status-line"><span id="hint">Jump on the actual page elements. Reach Next Page to continue.</span><span>Fictional school & student · Unofficial game · No login required</span></div>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
