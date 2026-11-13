@@ -38,3 +38,13 @@ for(let index=0;index<4;index++)test(`${LEVELS[index].name}: jump off both edges
   for(const target of ROUTES[index])s=planJump(s,target).state;
   assert(s.done);assert.equal(s.falls,0);
 });
+
+test('entering a side room gives no key and falling there returns to page start',()=>{
+  const s=createState(0);s.keys.add('right');
+  Object.assign(s.player,{x:-30,y:300,ground:null,jumped:true});tick(s,{});
+  assert.equal(s.room,'left');assert.equal(s.keys.size,1);assert(!s.keys.has('left'));
+  assert.equal(s.level.platforms.length,6);
+  s.player.y=800;tick(s,{});
+  assert.equal(s.room,null);assert.equal(s.level,s.pageLevel);assert.equal(s.player.ground,0);
+  assert.equal(s.falls,1);assert.deepEqual([...s.keys],['right']);
+});

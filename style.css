@@ -82,3 +82,12 @@ a, .link { color: #327caa; text-decoration: none; }
 .edge-key.collected { color: #558866; opacity: .4; }
 .sidebar-footer { margin-top: 12px; }
 .edge-key .icon { width: 30px; height: 34px; stroke-width: 2; }
+.resource-room { position: absolute; inset: 0; background: linear-gradient(#fff 0 160px,transparent 160px),repeating-linear-gradient(0deg,transparent 0 39px,#c8d9e433 40px),repeating-linear-gradient(90deg,#f2f6f9 0 39px,#d5e2eb77 40px); }
+.room-heading { padding: 30px 42px; border-bottom: 1px solid #ccd8e0; background: white; }
+.room-heading h1 { margin-bottom: 12px; }.room-heading p { color: #788b98; font-size: 12px; }
+.room-heading button { position: absolute; top: 40px; right: 40px; }
+.room-file-path { margin: 25px 42px; color: #6c8598; font-size: 11px; }.room-file-path span { float: right; }
+.room-platform { background: white; border: 1px solid #9db9cc; border-top: 4px solid #4a88ae; box-shadow: 0 3px 5px #263e5012; display: flex; align-items: center; justify-content: center; gap: 5px; color: #327caa; font-size: 10px; }
+.room-platform .icon { width: 15px; height: 15px; }.room-platform span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.key-vault { border-color: #c9a654; background: #fff9e8; color: #956f1b; }.vault-key { position: absolute; bottom: 100%; margin-bottom: 10px; }.vault-key .icon { width: 35px; height: 35px; stroke-width: 2; }
+.room-tip { position: absolute; bottom: 45px; width: 100%; text-align: center; font-size: 12px; color: #71899b; }

@@ -1,4 +1,4 @@
-import { LEVELS, SCENE_HEIGHT } from './levels.js';
+import { LEVELS, ROOMS, SCENE_HEIGHT } from './levels.js';
 export { LEVELS };
 export const WIDTH = 24, HEIGHT = 32, STEP = 1 / 120;
 
@@ -9,15 +9,22 @@ export function platformAt(p, time) {
 export function createState(index = 0) {
   const level = LEVELS[index], first = platformAt(level.platforms[0], 0);
   return {
-    index, level, time: 0,
+    index, level, pageLevel: level, room: null, time: 0,
     player: { x: first.x + 30, y: first.y - HEIGHT, vx: 0, vy: 0, ground: 0 },
     keys: new Set(), falls: 0, done: false,
   };
 }
-export function respawn(s) {
-  const p = platformAt(s.level.platforms[0], s.time);
-  Object.assign(s.player, { x: p.x + Math.min(30, p.w / 3), y: p.y - HEIGHT, vx: 0, vy: 0, ground: p.id, jumped: false });
+export function enterRoom(s,side) {
+  s.room=side;s.level=ROOMS[s.index][side];spawn(s);
 }
+export function leaveRoom(s) {
+  s.room=null;s.level=s.pageLevel;spawn(s);
+}
+function spawn(s) {
+  const p=platformAt(s.level.platforms[0],s.time);
+  Object.assign(s.player,{x:p.x+p.w/2-WIDTH/2,y:p.y-HEIGHT,vx:0,vy:0,ground:0,jumped:false});
+}
+export function respawn(s) { leaveRoom(s); }
 export function tick(s, input, dt = STEP) {
   if (s.done) return;
   const a = s.player, oldTime = s.time;
@@ -40,15 +47,17 @@ export function tick(s, input, dt = STEP) {
     const p = platformAt(base, s.time), old = platformAt(base, oldTime);
     if (a.x + WIDTH > p.x && a.x < p.x + p.w && previousY + HEIGHT <= old.y + 1.5 && a.y + HEIGHT >= p.y && a.vy >= 0) {
       a.y = p.y - HEIGHT; a.vy = 0; a.ground = p.id; a.jumped = false;
+      if (p.roomKey && s.room) {
+        s.keys.add(s.room);leaveRoom(s);return;
+      }
       if (p.goal && s.keys.size === 2) s.done = true;
       break;
     }
   }
   const side = a.x + WIDTH < 0 ? 'left' : a.x > s.level.length ? 'right' : null;
   if (side) {
-    if (a.jumped) s.keys.add(side);
-    else s.falls++;
-    respawn(s);
+    if (!s.room && a.jumped) enterRoom(s,side);
+    else {s.falls++;respawn(s);}
   }
   if (a.y > SCENE_HEIGHT + 36) { s.falls++; respawn(s); }
 }

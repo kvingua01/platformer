@@ -17,9 +17,11 @@ Open `http://localhost:3000`. Set `PORT` to use another port. Any static HTTP se
 - **R:** restart the page, clearing keys and falls
 - **Esc:** pause / resume
 
-Each page has **two keys**, one beyond its left boundary and one beyond its right boundary. Reach the **Personal resources** ledge at the lower left or the **Resources** ledge at the lower right, then jump outward beyond the edge. The golden key indicators point to the exits. Simply walking off an edge does not collect a key.
+Each page has **two separate parkour rooms**, one entered by jumping beyond its left edge and one beyond its right edge. Reach the **Personal resources** ledge at the lower left or the **Resources** ledge at the lower right, then jump outward. The golden room indicators point to the entrances. Walking off without jumping does not enter a room.
 
-Collecting a key immediately returns the cursor to the beginning of the current page. Collect **both different keys**, then land on **Next Page** to advance. Keys survive falls, but **R**, switching pages, or starting a new level clears them. There are **no checkpoints**: every fall returns to the page's starting platform. You no longer need to visit every platform. Finish Calendar to win; the header's **Courses** menu and left navigation let you practice any page.
+Inside the **left room**, parkour from right to left; inside the **right room**, travel left to right. Each room contains six resource platforms, and its key is in the vault at the far end. Entering a room grants nothing. Later rooms have narrower platforms and moving targets. All eight rooms have tested normal-input routes.
+
+Collecting the far-end key returns the cursor to the beginning of the main page. Finish **both rooms**, then land on **Next Page** to advance. Keys survive falls. **R**, switching pages, or starting a new level clears keys and exits any room. There are **no checkpoints**: falling anywhere, including inside a room, returns to the main page's start. The room's **Back to page** button also leaves without granting its key. You do not need to visit every main-page platform. Finish Calendar to win; the header's **Courses** menu and left navigation let you practice any page.
 
 Page elements are one-way surfaces: jump through their undersides and stand on top. To reach a lower row, walk off an edge and steer back underneath. Narrow course cards, underlined assignment links, score boxes, moving submission controls, and calendar event chips form the route to the side exits and goal.
 
@@ -47,7 +49,7 @@ The game needs no package installation to play. Development dependencies provide
 
 Physics tests verify acceleration/friction, grounded-only jumping, collision, start-only respawns, two-key goal locking, key persistence/reset, moving-platform carry, and complete routes through all four webpages using only ordinary movement, jumps, and drops. The route planner is test-only and is never loaded by the game.
 
-Browser tests send real keyboard events through the production requestAnimationFrame loop under a virtual clock. They collect both off-map keys and finish all four pages, check automatic transitions and victory/replay, compare every collision surface with its rendered DOM rectangle, and verify that the player's feet touch the visible element after each landing. They also exercise intentional falls and key retention, pause/resume/restart, header navigation, and responsive layouts at 1366×768, 1024×768, and 768×650. JavaScript errors fail the run. Screenshots are generated in ignored `test-results/`.
+Browser tests send real keyboard events through the production requestAnimationFrame loop under a virtual clock. They enter all eight side rooms, verify that entry does not grant a key, reach each far-end vault, and finish all four pages, check automatic transitions and victory/replay, compare every collision surface with its rendered DOM rectangle, and verify that the player's feet touch the visible element after each landing. They also exercise intentional falls and key retention, pause/resume/restart, header navigation, and responsive layouts at 1366×768, 1024×768, and 768×650. JavaScript errors fail the run. Screenshots are generated in ignored `test-results/`.
 
 Production files: `index.html`, `style.css`, `game.js`, `pages.js`, `levels.js`, and `physics.js`. Deploy them together to any static host. `server.js` is the local development server. No existing deployment configuration was present; none was replaced.
 

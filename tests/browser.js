@@ -49,7 +49,16 @@ try {
       Object.assign(s,{time:actual.time,acc:actual.acc,falls:actual.falls,keys:new Set(actual.collectedKeys),player:{...actual.player}});
       return s;
     }
-    async function run(plan){for(const action of plan.actions){await input(action);await page.clock.runFor(16);}}
+    async function run(plan){
+      let frame=0;
+      for(const action of plan.actions){
+        await input(action);await page.clock.runFor(16);frame++;
+        if(frame===plan.roomEntrance){
+          const entered=await snapshot();assert.equal(entered.room,plan.roomSide);assert(!entered.collectedKeys.includes(plan.roomSide));
+          await page.screenshot({path:`test-results/room-${level+1}-${plan.roomSide}.png`});
+        }
+      }
+    }
     await run(collectKey(await currentModel(),'left',simulateFrame));
     assert.deepEqual((await snapshot()).collectedKeys,['left']);assert.equal((await snapshot()).ground,0);
     if(level===0){
@@ -74,7 +83,7 @@ try {
         assert.equal((await snapshot()).collectedKeys.length,2);assert.equal((await snapshot()).ground,0);
       }
     }
-    await input({});assert((await snapshot()).done);console.log(`Browser: ${model.level.name} completed after both off-map key jumps.`);
+    await input({});assert((await snapshot()).done);console.log(`Browser: ${model.level.name} completed after both parkour rooms.`);
     await page.clock.runFor(1400);assert.equal((await snapshot()).mode,level===3?'victory':'play');
     if(level<3)assert.deepEqual((await snapshot()).collectedKeys,[]);
   }
@@ -94,5 +103,5 @@ try {
     await page.screenshot({path:`test-results/calendar-${size.width}.png`});
   }
   assert.deepEqual(errors,[]);
-  console.log('PASS: real keyboard movement/jumps, DOM-to-physics alignment, both off-map keys, start-only respawns, all four auto-transitions, victory/replay, pause/restart, falls, navigation, responsive layouts, no JS errors.');
+  console.log('PASS: real keyboard movement/jumps, DOM-to-physics alignment, all eight side rooms, far-end keys, start-only respawns, all four auto-transitions, victory/replay, pause/restart, falls, navigation, responsive layouts, no JS errors.');
 } finally { await browser.close(); }

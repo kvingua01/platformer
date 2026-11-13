@@ -1,4 +1,4 @@
-import { LEVELS } from './levels.js';
+import { LEVELS, ROOMS } from './levels.js';
 
 const iconPaths = {
   key: '<circle cx="7" cy="8" r="5"/><path d="m11 12 10 10m-3-3 3-3m-6 0 3-3"/>',
@@ -114,5 +114,15 @@ function calendarPage() {
     ${surface(3,10,'Next Page →','next-page')}`;
 }
 export function renderPage(index) {
-  return `<div class="site-columns">${leftSidebar(index)}<main class="page-content page-${index}"></main>${rightSidebar(index)}</div>${pageHeading(index)}${[coursePage,assignmentsPage,gradesPage,calendarPage][index]()}${LEVELS[index].platforms.filter(p=>p.edge).map(p=>surface(index,p.id,p.edge==='left'?'← Personal resources':'Resources →','edge-launch')).join('')}<div class="edge-key left-key" data-key="left"><span>${icon('key')}</span><small>← JUMP OFF</small></div><div class="edge-key right-key" data-key="right"><span>${icon('key')}</span><small>JUMP OFF →</small></div>`;
+  return `<div class="site-columns">${leftSidebar(index)}<main class="page-content page-${index}"></main>${rightSidebar(index)}</div>${pageHeading(index)}${[coursePage,assignmentsPage,gradesPage,calendarPage][index]()}${LEVELS[index].platforms.filter(p=>p.edge).map(p=>surface(index,p.id,p.edge==='left'?'← Personal resources':'Resources →','edge-launch')).join('')}<div class="edge-key left-key" data-key="left"><span>${icon('key')}</span><small>← ROOM</small></div><div class="edge-key right-key" data-key="right"><span>${icon('key')}</span><small>ROOM →</small></div>`;
+}
+
+export function renderRoom(index,side) {
+  const room=ROOMS[index][side];
+  return `<div class="resource-room ${side}">
+    <div class="room-heading"><div class="breadcrumb">Resources › ${LEVELS[index].name} › ${side==='left'?'Left':'Right'} room</div><h1>${side==='left'?'Left':'Right'} resource room</h1><p>Parkour ${side==='left'?'← left':'right →'} to the key vault. A fall returns you to the page start. No checkpoints.</p><button class="small-button" data-leave-room>Back to page</button></div>
+    <div class="room-file-path">PERSONAL RESOURCES <span>6 folders · ${LEVELS[index].difficulty}</span></div>
+    ${room.platforms.map(p=>`<div id="platform-${p.id}" data-surface="${p.id}" class="surface room-platform ${p.moving?'moving':''} ${p.roomKey?'key-vault':''}" style="left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px">${p.roomKey?`<div class="vault-key">${icon('key')}</div>`:icon('folder')}<span>${['Entrance','Shared files','Study notes','Practice','Archive','Key vault'][p.id]}</span></div>`).join('')}
+    <div class="room-tip">${side==='left'?'←':'→'} The key is at the far end — entering the room does not collect it.</div>
+  </div>`;
 }

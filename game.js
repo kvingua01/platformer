@@ -1,16 +1,16 @@
-import {LEVELS,createState,tick,platformAt,STEP} from './physics.js';
+import {LEVELS,createState,tick,platformAt,STEP,leaveRoom} from './physics.js';
 import {SCENE_WIDTH, SCENE_HEIGHT} from './levels.js';
-import {renderPage, icon} from './pages.js';
+import {renderPage, renderRoom, icon} from './pages.js';
 const $=s=>document.querySelector(s), world=$('#world'),player=$('#player'),overlay=$('#overlay');
-let state=createState(),mode='start',acc=0,last=0,scale=1,camera=0,transitionTimer=null;const keys=new Set();let jumpQueued=false;let previousGround=0;
+let state=createState(),mode='start',acc=0,last=0,scale=1,camera=0,transitionTimer=null;const keys=new Set();let renderedRoom='page';let jumpQueued=false;let previousGround=0;
 const colors=['#5c8daa','#718f78','#b39a71','#8293b6','#af8c99','#749da0','#9c91b5','#778b9c'];
-function modal(kind){mode=kind;keys.clear();jumpQueued=false;overlay.classList.remove('hidden');const content={start:['<svg viewBox="0 0 40 40" width="30" height="30" style="vertical-align:middle" aria-hidden="true"><path d="M10 4v28l8-8 6 12 5-3-6-11h12z" fill="white" stroke="#327caa" stroke-width="2"/></svg>','WELCOME TO YOUR SCHOOL DAY','A new way to navigate.','Jump beyond BOTH the left and right edges of each page to collect two keys. Use the Resources ledges near the bottom corners. Each key returns you to the start. Falls also return you to the start, but you keep collected keys. Both keys unlock Next Page. No checkpoints.','Let’s play →'],pause:['Ⅱ','TAKE YOUR TIME','Class is on a break.','Your cursor is right where you left it. Ready for the next jump?','Resume →'],help:['⌨','THE SHORT COURSE','Make every jump count.','A / D or ← / → to move. Space, W, or ↑ to jump while grounded. R restarts the level; Esc pauses. Jump off each side of the map for a key. Both keys unlock Next Page. Falls return you to the start; keys stay collected. R clears keys. No checkpoints.','Got it →'],complete:['✓','PAGE COMPLETED',`${state.level.name}, complete.`,'Nice work! Your next page is loading…',''],victory:['✦','SCHOOL DAY COMPLETE','You made the grade.','Four pages. A whole lot of jumps. You navigated the entire school day — one little cursor at a time.','Play again →']}[kind];overlay.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-label="${content[2]}"><div class="modal-icon">${content[0]}</div><div class="eyebrow">${content[1]}</div><h2>${content[2]}</h2><p>${content[3]}</p>${content[4]?`<button class="primary" id="modal-action">${content[4]}</button>`:''}${kind==='pause'?'<button class="text-button" id="restart">Restart this level</button>':''}<div class="sub">${kind==='start'?'A / D to move &nbsp; · &nbsp; Space to jump &nbsp; · &nbsp; No login needed':kind==='victory'?'Thanks for taking the scenic route.':'R to restart · Esc to pause · Unofficial offline game'}</div></div>`;$('#modal-action')?.addEventListener('click',()=>{if(kind==='victory')load(0);play();});$('#restart')?.addEventListener('click',()=>{load(state.index);play();});$('#modal-action')?.focus();}
+function modal(kind){mode=kind;keys.clear();jumpQueued=false;overlay.classList.remove('hidden');const content={start:['<svg viewBox="0 0 40 40" width="30" height="30" style="vertical-align:middle" aria-hidden="true"><path d="M10 4v28l8-8 6 12 5-3-6-11h12z" fill="white" stroke="#327caa" stroke-width="2"/></svg>','WELCOME TO YOUR SCHOOL DAY','A new way to navigate.','Jump off each page edge to enter a separate parkour room. Reach the key vault at the far end of BOTH rooms. Collecting a key returns you to the page start. Falls also return you to the start, but you keep collected keys. Both keys unlock Next Page. No checkpoints.','Let’s play →'],pause:['Ⅱ','TAKE YOUR TIME','Class is on a break.','Your cursor is right where you left it. Ready for the next jump?','Resume →'],help:['⌨','THE SHORT COURSE','Make every jump count.','A / D or ← / → to move. Space, W, or ↑ to jump while grounded. R restarts the level; Esc pauses. Jump off each side to enter a parkour room. The key is at the far end of each room. Both keys unlock Next Page. Falls return you to the start; keys stay collected. R clears keys. No checkpoints.','Got it →'],complete:['✓','PAGE COMPLETED',`${state.level.name}, complete.`,'Nice work! Your next page is loading…',''],victory:['✦','SCHOOL DAY COMPLETE','You made the grade.','Four pages. A whole lot of jumps. You navigated the entire school day — one little cursor at a time.','Play again →']}[kind];overlay.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-label="${content[2]}"><div class="modal-icon">${content[0]}</div><div class="eyebrow">${content[1]}</div><h2>${content[2]}</h2><p>${content[3]}</p>${content[4]?`<button class="primary" id="modal-action">${content[4]}</button>`:''}${kind==='pause'?'<button class="text-button" id="restart">Restart this level</button>':''}<div class="sub">${kind==='start'?'A / D to move &nbsp; · &nbsp; Space to jump &nbsp; · &nbsp; No login needed':kind==='victory'?'Thanks for taking the scenic route.':'R to restart · Esc to pause · Unofficial offline game'}</div></div>`;$('#modal-action')?.addEventListener('click',()=>{if(kind==='victory')load(0);play();});$('#restart')?.addEventListener('click',()=>{load(state.index);play();});$('#modal-action')?.focus();}
 function play(){$('#nav-popover').hidden=true;mode='play';overlay.classList.add('hidden');$('#pause span').textContent='Pause';$('#viewport').focus();}
 function load(index) {
   clearTimeout(transitionTimer);
   state = createState(index);
   previousGround = state.player.ground;
-  world.innerHTML = renderPage(index);
+  world.innerHTML = renderPage(index);renderedRoom='page';
   $('#level-title').textContent = state.level.name;
   $('#difficulty').textContent = state.level.difficulty;
   world.querySelectorAll('[data-level]').forEach(button => button.onclick = () => {
@@ -22,6 +22,15 @@ function load(index) {
 function burst(){for(let i=0;i<22;i++){const p=document.createElement('i');p.className='spark';p.style.cssText=`left:${state.player.x-camera+12}px;top:${state.player.y}px;--dx:${Math.random()*160-80}px;--dy:${Math.random()*160-100}px;background:${colors[i%8]}`;$('#particles').append(p);setTimeout(()=>p.remove(),900);}}
 function complete(){burst();modal('complete');transitionTimer=setTimeout(()=>{if(state.index===3)modal('victory');else{load(state.index+1);play();}},1350);}
 function render() {
+  const view=state.room||'page';
+  if(view!==renderedRoom){
+    world.innerHTML=state.room?renderRoom(state.index,state.room):renderPage(state.index);
+    renderedRoom=view;
+    world.querySelector('[data-leave-room]')?.addEventListener('click',()=>{leaveRoom(state);render();});
+    world.querySelectorAll('[data-level]').forEach(button=>button.onclick=()=>{load(Number(button.dataset.level));play();});
+    world.querySelectorAll('[data-notice]').forEach(button=>button.onclick=()=>showPopover('Members',button.dataset.notice));
+  }
+  $('#level-title').textContent=state.level.name;
   const a = state.player;
   if (previousGround === null && a.ground !== null) {
     player.classList.remove('landed'); void player.offsetWidth; player.classList.add('landed');
@@ -44,7 +53,7 @@ function render() {
   $('#key-stat').textContent = `Keys ${state.keys.size}/2 · ${state.keys.has('left')?'✓':'←'} Left · ${state.keys.has('right')?'✓':'→'} Right`;
   document.querySelectorAll('[data-key]').forEach(el=>el.classList.toggle('collected',state.keys.has(el.dataset.key)));
   $('#fall-stat').textContent = `↻ ${state.falls} falls`;
-  $('#hint').textContent = state.keys.size===2 ? 'Both keys collected! Reach Next Page. R restarts and clears your keys.' : 'Jump beyond BOTH page edges for keys. Resources ledges help you launch. No checkpoints; falls return to the start.';
+  $('#hint').textContent = state.keys.size===2 ? 'Both keys collected! Reach Next Page. R restarts and clears your keys.' : state.room ? 'Reach the far-end key vault. Falling returns you to the page start — no checkpoints.' : 'Jump off each page edge to enter a parkour room. Complete BOTH rooms for the keys.';
 }
 function resize() {
   scale = Math.min(innerWidth / SCENE_WIDTH, Math.max(300, innerHeight - 124) / SCENE_HEIGHT);
@@ -79,4 +88,4 @@ $('#user-menu').onclick = () => showPopover('Jamie Davis', 'Student · Northwood
 document.addEventListener('click', event => { if (!event.target.closest('.site-header')) $('#nav-popover').hidden = true; });
 load(0); resize(); modal('start'); requestAnimationFrame(frame);
 // Read-only diagnostics keep browser tests on the same simulation as gameplay.
-window.game={snapshot:()=>({mode,index:state.index,x:state.player.x,y:state.player.y,ground:state.player.ground,falls:state.falls,done:state.done,time:state.time,acc,player:{...state.player},collectedKeys:[...state.keys]}),levels:LEVELS};
+window.game={snapshot:()=>({mode,room:state.room,index:state.index,x:state.player.x,y:state.player.y,ground:state.player.ground,falls:state.falls,done:state.done,time:state.time,acc,player:{...state.player},collectedKeys:[...state.keys]}),levels:LEVELS};

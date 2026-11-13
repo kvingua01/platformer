@@ -24,6 +24,7 @@ export function planJump(state, target, simulate = tick) {
           const center=p.x+p.w/2-WIDTH/2;
           const leaving=strategy!=='jump'&&s.player.y+HEIGHT<=source.y+2;
           step(leaving?{right:direction>0,left:direction<0}:{right:s.player.x<center-4,left:s.player.x>center+4});
+          if(state.room && s.keys.has(state.room))return {state:s,actions};
           if(s.player.ground===target) {
             for(let settle=0;settle<100&&!s.done;settle++) {
               const landing=platformAt(s.level.platforms[target],s.time);
@@ -49,11 +50,17 @@ export function collectKey(state, side, simulate = tick) {
   const plan=planJump(state,target,simulate);
   const s=plan.state;
   let first=true;
-  for(let i=0;i<220&&!s.keys.has(side);i++) {
+  for(let i=0;i<220&&s.room!==side;i++) {
     const action={left:side==='left',right:side==='right',jump:first};
     first=false;plan.actions.push(action);simulate(s,action);
-    if(s.falls>state.falls)throw Error(`Failed ${side} key excursion`);
+    if(s.falls>state.falls)throw Error(`Failed ${side} room entrance`);
   }
-  if(!s.keys.has(side))throw Error(`Did not collect ${side} key`);
+  if(s.room!==side||s.keys.has(side))throw Error(`Room entrance must not grant a key`);
+  plan.roomEntrance=plan.actions.length;plan.roomSide=side;
+  for(let id=1;id<6;id++) {
+    const hop=planJump(plan.state,id,simulate);
+    plan.actions.push(...hop.actions);plan.state=hop.state;
+  }
+  if(!plan.state.keys.has(side)||plan.state.room!==null)throw Error(`Did not finish ${side} room`);
   return plan;
 }

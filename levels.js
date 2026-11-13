@@ -47,3 +47,19 @@ export const LEVELS = ['Courses', 'Assignments', 'Grades', 'Calendar'].map((name
     {id: surfaces[index].length + 1, x: 1120, y: 680, w: 125, h: 30, edge: 'right'},
   ]),
 }));
+
+// Each page has two independent rooms; the left room runs right-to-left.
+export const ROOMS = LEVELS.map((page,index)=>Object.fromEntries(['left','right'].map(side=>{
+  const widths=[150,...Array(4).fill([110,90,75,60][index]),100];
+  const heights=[540,470,530,440,500,430];
+  return [side,{
+    name:`${page.name} · ${side==='left'?'Left':'Right'} resource room`,
+    length:SCENE_WIDTH,
+    platforms:widths.map((w,id)=>({
+      id,x:side==='left'?SCENE_WIDTH-(65+id*210)-w:65+id*210,
+      y:heights[id],w,h:44,roomKey:id===5,
+      moving:index>0&&[2,4].includes(id),axis:'x',
+      amplitude:[0,8,12,16][index],speed:1.6+index*.25,phase:id,
+    })),
+  }];
+})));
