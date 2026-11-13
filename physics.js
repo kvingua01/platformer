@@ -3,7 +3,7 @@ export { LEVELS };
 export const WIDTH = 24, HEIGHT = 32, STEP = 1 / 120;
 
 export function platformAt(p, time) {
-  const offset = p.moving ? Math.sin(time * 1.5 + p.phase) * p.amplitude : 0;
+  const offset = p.moving ? Math.sin(time * (p.speed || 1.5) + p.phase) * p.amplitude : 0;
   return { ...p, x: p.x + (p.axis === 'x' ? offset : 0), y: p.y + (p.axis === 'x' ? 0 : offset) };
 }
 export function createState(index = 0) {
@@ -11,7 +11,7 @@ export function createState(index = 0) {
   return {
     index, level, time: 0,
     player: { x: first.x + 30, y: first.y - HEIGHT, vx: 0, vy: 0, ground: 0 },
-    checkpoint: 0, activated: new Set(), falls: 0, done: false,
+    checkpoint: 0, activated: new Set(), visited: new Set([0]), falls: 0, done: false,
   };
 }
 export function respawn(s) {
@@ -41,7 +41,8 @@ export function tick(s, input, dt = STEP) {
     if (a.x + WIDTH > p.x && a.x < p.x + p.w && previousY + HEIGHT <= old.y + 1.5 && a.y + HEIGHT >= p.y && a.vy >= 0) {
       a.y = p.y - HEIGHT; a.vy = 0; a.ground = p.id;
       if (p.checkpoint) { s.activated.add(p.id); s.checkpoint = p.id; }
-      if (p.goal) s.done = true;
+      if (!p.goal) s.visited.add(p.id);
+      if (p.goal && s.visited.size === s.level.platforms.length - 1) s.done = true;
       break;
     }
   }

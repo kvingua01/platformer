@@ -66,3 +66,13 @@ a, .link { color: #327caa; text-decoration: none; }
 .pause-icon { width: 9px; height: 9px; vertical-align: middle; }
 #viewport { max-width: 100%; }
 .cursor-mini { width: 18px; height: 22px; }
+/* Small course cards remain in the website grid; gaps now require real jumps. */
+.course-caption { padding: 8px; }
+.course-caption a { font-size: 12px; }
+.course-caption small { font-size: 8px; }
+.surface:not(.next-page):before { content: ''; position: absolute; width: 5px; height: 5px; background: #0877b8; border-radius: 50%; top: -7px; left: 3px; box-shadow: 0 0 0 2px white; }
+.surface.visited:not(.next-page):before { background: #60a36b; }
+.next-page.locked { color: #777; background: #eee; font-size: 10px; }
+.playable-event { font-size: 8px; }
+.due-chip { display: flex; align-items: center; justify-content: center; padding: 2px; font-size: 9px; line-height: 12px; text-align: center; }
+.submit-button { font-size: 10px; }

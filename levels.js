@@ -25,17 +25,24 @@ const surfaces = [
     [892, 515, 72, 27], [1005, 635, 170, 32],
   ],
 ];
-const checkpointIds = [[1, 3, 5], [3, 5], [4], [6]];
+// Keep normal website grids, but create meaningful gaps and precision targets.
+const targetWidths = [
+  [180,180,180,180,180,180,110,110],
+  [160,82,92,82,110,72,92,110],
+  [130,62,54,72,90,54,54,100],
+  [48,48,48,48,48,48,48,48,48,48,90],
+];
+const checkpointIds = [[3, 5], [3], [4], [6]];
 export const LEVELS = ['Courses', 'Assignments', 'Grades', 'Calendar'].map((name, index) => ({
   name,
-  difficulty: ['Easy', 'Medium', 'Hard', 'Very hard'][index],
+  difficulty: ['Challenging', 'Hard', 'Expert', 'Extreme'][index],
   length: SCENE_WIDTH,
   platforms: surfaces[index].map(([x, y, w, h], id, all) => ({
-    id, x, y, w, h,
+    id, x: x + (w-targetWidths[index][id])/2, y, w: targetWidths[index][id], h,
     checkpoint: checkpointIds[index].includes(id),
     goal: id === all.length - 1,
     // Submission/score chips and calendar event chips move inside their cells.
-    moving: index > 0 && [2, 5].includes(id),
-    axis: 'x', amplitude: index === 3 ? 12 : 8, phase: id,
+    moving: index > 0 && (index === 3 ? [1,2,4,5,8,9] : [2,5]).includes(id),
+    axis: 'x', amplitude: [0,14,18,22][index], speed: [1.5,1.9,2.3,2.7][index], phase: id,
   })),
 }));

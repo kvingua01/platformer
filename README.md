@@ -17,16 +17,16 @@ Open `http://localhost:3000`. Set `PORT` to use another port. Any static HTTP se
 - **R:** restart the page, clearing checkpoints and falls
 - **Esc:** pause / resume
 
-Land on flagged page elements to activate checkpoints. Falling off the page respawns you at the latest checkpoint. Land on **Next Page** to automatically advance; finish Calendar to win. The header's **Courses** menu and left navigation let you practice any page directly.
+Land on flagged page elements to activate checkpoints. Falling off the page respawns you at the latest checkpoint. Land on every blue-dotted page element to unlock **Next Page**. Dots turn green when visited, and that progress survives falls. Land on the unlocked button to automatically advance; finish Calendar to win. The header's **Courses** menu and left navigation let you practice any page directly.
 
 Page elements are one-way surfaces: the cursor can jump through their undersides and stand on top. To get to a lower row, walk off an edge, then steer back underneath. Courses has a route across the upper card row, down around the outside of the grid, across the lower cards, and onto the right sidebar's **View all upcoming** control before the goal. Links with a subtle lower border, score boxes, submission buttons, and event chips are standable in later pages. There is no invisible solid floor.
 
 ## Four different webpages
 
-1. **Courses · Easy:** six illustrated course cards in a normal two-row grid, course sidebar, reminders, upcoming assignments, and three checkpoints.
-2. **Assignments · Medium:** material and folder listings, due-date chips, submission buttons, two checkpoints, and moving controls within their rows.
+1. **Courses · Easy:** six illustrated course cards in a normal two-row grid, course sidebar, reminders, upcoming assignments, and two checkpoints.
+2. **Assignments · Medium:** material and folder listings, due-date chips, submission buttons, one checkpoint, and faster moving controls within their rows.
 3. **Grades · Hard:** gradebook table, assignment links, points, percentage cells, semester summary, narrower surfaces, and one checkpoint.
-4. **Calendar · Very hard:** November 2026 month grid, date numbers, events inside calendar cells, small moving event chips, and one checkpoint.
+4. **Calendar · Very hard:** November 2026 month grid, date numbers, events inside calendar cells, 48-pixel-wide event chips with six fast-moving targets, and one checkpoint.
 
 All pages share the Schoology-style blue header with branding, Courses / Groups / Resources / Grades navigation, original SVG icons, a fictional student profile, and left and right sidebars. The interface fits Chromebook-sized windows with the top navigation and game controls visible. A compact game bar holds controls and checkpoint status.
 

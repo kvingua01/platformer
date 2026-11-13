@@ -45,7 +45,7 @@ try {
     for(const rect of rectangles){const p=platformAt(model.level.platforms[rect.id],initial.time);assert(rect.text.length>0);for(const k of ['x','y','w','h'])assert(Math.abs(rect[k]-p[k])<.1,`DOM collision mismatch ${level}:${rect.id}:${k}`);}
     for(const target of ROUTES[level]) {
       const actual=await snapshot();const s=createState(level);
-      Object.assign(s,{time:actual.time,acc:actual.acc,checkpoint:actual.checkpoint,falls:actual.falls,activated:new Set(actual.activated),player:{...actual.player}});
+      Object.assign(s,{time:actual.time,acc:actual.acc,checkpoint:actual.checkpoint,falls:actual.falls,visited:new Set(actual.visited),activated:new Set(actual.activated),player:{...actual.player}});
       const plan=planJump(s,target,simulateFrame);
       for(const action of plan.actions){await input(action);await page.clock.runFor(16);}
       const landed=await snapshot();
@@ -63,12 +63,13 @@ try {
   await page.getByRole('button',{name:'Play again →'}).click();assert.equal((await snapshot()).index,0);
   const fresh=await snapshot(), recovery=createState(0);
   Object.assign(recovery,{time:fresh.time,acc:fresh.acc,player:{...fresh.player}});
-  const checkpointPlan=planJump(recovery,1,simulateFrame);
+  let checkpointPlan=planJump(recovery,1,simulateFrame);
+  for(const t of [2,3]) { const next=planJump(checkpointPlan.state,t,simulateFrame);checkpointPlan={state:next.state,actions:[...checkpointPlan.actions,...next.actions]}; }
   for(const action of checkpointPlan.actions){await input(action);await page.clock.runFor(16);}
-  await input({left:true});
+  await input({right:true});
   for(let frame=0;frame<300&&(await snapshot()).falls===0;frame++)await page.clock.runFor(16);
   await input({});const recovered=await snapshot();
-  assert.equal(recovered.falls,1);assert.equal(recovered.checkpoint,1);assert.equal(recovered.ground,1);
+  assert.equal(recovered.falls,1);assert.equal(recovered.checkpoint,3);assert.equal(recovered.ground,3);
   assert.equal(recovered.checkpoints,1);
   await page.keyboard.press('r');assert.equal((await snapshot()).falls,0);
   await page.locator('#courses-nav').click();await page.locator('[data-page="3"]').click();assert.equal((await snapshot()).index,3);

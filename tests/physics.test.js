@@ -10,10 +10,10 @@ test('acceleration, friction, grounded-only jumping and landing',()=>{
   advance(s,{},120);assert.equal(s.player.ground,0);assert.equal(s.player.y,s.level.platforms[0].y-HEIGHT);
 });
 test('falling respawns at latest checkpoint; restart clears it',()=>{
-  const s=createState(),p=s.level.platforms[1];
+  const s=createState(),p=s.level.platforms[3];
   Object.assign(s.player,{x:p.x+20,y:p.y-HEIGHT-2,vy:100,ground:null});advance(s,{},8);
-  assert(s.activated.has(1));s.player.y=800;tick(s,{});
-  assert.equal(s.falls,1);assert.equal(s.checkpoint,1);assert.equal(s.player.ground,1);
+  assert(s.activated.has(3));s.player.y=800;tick(s,{});
+  assert.equal(s.falls,1);assert.equal(s.checkpoint,3);assert.equal(s.player.ground,3);
   assert.equal(createState().activated.size,0);
 });
 test('moving interface chips carry the cursor in both axes',()=>{
@@ -30,4 +30,15 @@ for(let index=0;index<4;index++)test(`${LEVELS[index].name}: complete a normal-i
   for(const target of ROUTES[index])s=planJump(s,target).state;
   assert(s.done);assert.equal(s.falls,0);
   assert.equal(s.activated.size,s.level.platforms.filter(p=>p.checkpoint).length);
+});
+
+test('Next Page requires every surface; progress survives falls and resets on restart',()=>{
+  const s=createState(3),goal=s.level.platforms.at(-1);
+  Object.assign(s.player,{x:goal.x+10,y:goal.y-HEIGHT-1,vy:100,ground:null});
+  advance(s,{},4);assert.equal(s.player.ground,goal.id);assert.equal(s.done,false);
+  s.visited.add(2);s.player.y=800;tick(s,{});assert(s.visited.has(2));
+  assert.deepEqual([...createState(3).visited],[0]);
+  for(const p of s.level.platforms)if(!p.goal)s.visited.add(p.id);
+  Object.assign(s.player,{x:goal.x+10,y:goal.y-HEIGHT-1,vy:100,ground:null});
+  advance(s,{},4);assert.equal(s.done,true);
 });
