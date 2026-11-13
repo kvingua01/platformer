@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { LEVELS,createState,tick,platformAt,HEIGHT,respawn } from '../physics.js';
-import { ROUTES,planJump } from './route.js';
+import {LEVELS,createState,tick,platformAt,HEIGHT,respawn} from '../physics.js';
+import {ROUTES,planJump,collectKey} from './route.js';
 function advance(s,input,n){for(let j=0;j<n;j++)tick(s,input);}
 test('acceleration, friction, grounded-only jumping and landing',()=>{
   const s=createState();advance(s,{right:true},20);assert(s.player.vx>0);
@@ -9,36 +9,32 @@ test('acceleration, friction, grounded-only jumping and landing',()=>{
   const velocity=s.player.vy;tick(s,{jump:true});assert(s.player.vy>velocity);
   advance(s,{},120);assert.equal(s.player.ground,0);assert.equal(s.player.y,s.level.platforms[0].y-HEIGHT);
 });
-test('falling respawns at latest checkpoint; restart clears it',()=>{
-  const s=createState(),p=s.level.platforms[3];
-  Object.assign(s.player,{x:p.x+20,y:p.y-HEIGHT-2,vy:100,ground:null});advance(s,{},8);
-  assert(s.activated.has(3));s.player.y=800;tick(s,{});
-  assert.equal(s.falls,1);assert.equal(s.checkpoint,3);assert.equal(s.player.ground,3);
-  assert.equal(createState().activated.size,0);
+test('all falls return to the beginning; keys persist until restart',()=>{
+  const s=createState();s.keys.add('left');s.player.y=800;tick(s,{});
+  assert.equal(s.falls,1);assert.equal(s.player.ground,0);assert(s.keys.has('left'));
+  assert.equal(createState().keys.size,0);
+  assert(LEVELS.every(l=>l.platforms.every(p=>!p.checkpoint)));
 });
-test('moving interface chips carry the cursor in both axes',()=>{
-  const s=createState(3);s.checkpoint=2;respawn(s);
-  const offset=s.player.x-platformAt(s.level.platforms[2],s.time).x;
-  for(let j=0;j<360;j++){
-    tick(s,{});const p=platformAt(s.level.platforms[2],s.time);
-    assert.equal(s.player.ground,2);assert(Math.abs(s.player.y+HEIGHT-p.y)<.01);
-    assert(Math.abs(s.player.x-p.x-offset)<.01);
-  }
+test('walking off an edge does not grant a jump key',()=>{
+  const s=createState();Object.assign(s.player,{x:-30,y:300,ground:null,jumped:false});tick(s,{});
+  assert.equal(s.keys.size,0);assert.equal(s.falls,1);assert.equal(s.player.ground,0);
 });
-for(let index=0;index<4;index++)test(`${LEVELS[index].name}: complete a normal-input route through the webpage`,()=>{
-  let s=createState(index);
+test('moving interface chips carry the cursor',()=>{
+  const s=createState(3);s.player.ground=2;
+  const p=platformAt(s.level.platforms[2],s.time);s.player.x=p.x+12;s.player.y=p.y-HEIGHT;
+  for(let j=0;j<360;j++){tick(s,{});const p=platformAt(s.level.platforms[2],s.time);assert.equal(s.player.ground,2);assert(Math.abs(s.player.y+HEIGHT-p.y)<.01);assert(Math.abs(s.player.x-p.x-12)<.01);}
+});
+test('Next Page requires both different keys',()=>{
+  const s=createState(0),goal=s.level.platforms.find(p=>p.goal);
+  function land(){Object.assign(s.player,{x:goal.x+10,y:goal.y-HEIGHT-1,vy:100,ground:null});advance(s,{},4);}
+  land();assert(!s.done);s.keys.add('left');land();assert(!s.done);
+  s.keys.add('left');land();assert(!s.done);s.keys.add('right');land();assert(s.done);
+});
+for(let index=0;index<4;index++)test(`${LEVELS[index].name}: jump off both edges and finish using normal inputs`,()=>{
+  let s=collectKey(createState(index),'left').state;assert.equal(s.player.ground,0);
+  for(const target of ROUTES[index])s=planJump(s,target).state;
+  assert(!s.done);s=collectKey(s,'right').state;
+  assert.equal(s.keys.size,2);assert.equal(s.player.ground,0);
   for(const target of ROUTES[index])s=planJump(s,target).state;
   assert(s.done);assert.equal(s.falls,0);
-  assert.equal(s.activated.size,s.level.platforms.filter(p=>p.checkpoint).length);
-});
-
-test('Next Page requires every surface; progress survives falls and resets on restart',()=>{
-  const s=createState(3),goal=s.level.platforms.at(-1);
-  Object.assign(s.player,{x:goal.x+10,y:goal.y-HEIGHT-1,vy:100,ground:null});
-  advance(s,{},4);assert.equal(s.player.ground,goal.id);assert.equal(s.done,false);
-  s.visited.add(2);s.player.y=800;tick(s,{});assert(s.visited.has(2));
-  assert.deepEqual([...createState(3).visited],[0]);
-  for(const p of s.level.platforms)if(!p.goal)s.visited.add(p.id);
-  Object.assign(s.player,{x:goal.x+10,y:goal.y-HEIGHT-1,vy:100,ground:null});
-  advance(s,{},4);assert.equal(s.done,true);
 });

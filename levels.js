@@ -32,17 +32,18 @@ const targetWidths = [
   [130,62,54,72,90,54,54,100],
   [48,48,48,48,48,48,48,48,48,48,90],
 ];
-const checkpointIds = [[3, 5], [3], [4], [6]];
 export const LEVELS = ['Courses', 'Assignments', 'Grades', 'Calendar'].map((name, index) => ({
   name,
   difficulty: ['Challenging', 'Hard', 'Expert', 'Extreme'][index],
   length: SCENE_WIDTH,
   platforms: surfaces[index].map(([x, y, w, h], id, all) => ({
     id, x: x + (w-targetWidths[index][id])/2, y, w: targetWidths[index][id], h,
-    checkpoint: checkpointIds[index].includes(id),
     goal: id === all.length - 1,
     // Submission/score chips and calendar event chips move inside their cells.
     moving: index > 0 && (index === 3 ? [1,2,4,5,8,9] : [2,5]).includes(id),
     axis: 'x', amplitude: [0,14,18,22][index], speed: [1.5,1.9,2.3,2.7][index], phase: id,
-  })),
+  })).concat([
+    {id: surfaces[index].length, x: 35, y: 650, w: 145, h: 30, edge: 'left'},
+    {id: surfaces[index].length + 1, x: 1120, y: 680, w: 125, h: 30, edge: 'right'},
+  ]),
 }));

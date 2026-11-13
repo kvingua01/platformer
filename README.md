@@ -14,21 +14,24 @@ Open `http://localhost:3000`. Set `PORT` to use another port. Any static HTTP se
 
 - **A / D or Left / Right:** move
 - **Space / W / Up:** jump while grounded
-- **R:** restart the page, clearing checkpoints and falls
+- **R:** restart the page, clearing keys and falls
 - **Esc:** pause / resume
 
-Land on flagged page elements to activate checkpoints. Falling off the page respawns you at the latest checkpoint. Land on every blue-dotted page element to unlock **Next Page**. Dots turn green when visited, and that progress survives falls. Land on the unlocked button to automatically advance; finish Calendar to win. The header's **Courses** menu and left navigation let you practice any page directly.
+Each page has **two keys**, one beyond its left boundary and one beyond its right boundary. Reach the **Personal resources** ledge at the lower left or the **Resources** ledge at the lower right, then jump outward beyond the edge. The golden key indicators point to the exits. Simply walking off an edge does not collect a key.
 
-Page elements are one-way surfaces: the cursor can jump through their undersides and stand on top. To get to a lower row, walk off an edge, then steer back underneath. Courses has a route across the upper card row, down around the outside of the grid, across the lower cards, and onto the right sidebar's **View all upcoming** control before the goal. Links with a subtle lower border, score boxes, submission buttons, and event chips are standable in later pages. There is no invisible solid floor.
+Collecting a key immediately returns the cursor to the beginning of the current page. Collect **both different keys**, then land on **Next Page** to advance. Keys survive falls, but **R**, switching pages, or starting a new level clears them. There are **no checkpoints**: every fall returns to the page's starting platform. You no longer need to visit every platform. Finish Calendar to win; the header's **Courses** menu and left navigation let you practice any page.
+
+Page elements are one-way surfaces: jump through their undersides and stand on top. To reach a lower row, walk off an edge and steer back underneath. Narrow course cards, underlined assignment links, score boxes, moving submission controls, and calendar event chips form the route to the side exits and goal.
+
 
 ## Four different webpages
 
-1. **Courses · Easy:** six illustrated course cards in a normal two-row grid, course sidebar, reminders, upcoming assignments, and two checkpoints.
-2. **Assignments · Medium:** material and folder listings, due-date chips, submission buttons, one checkpoint, and faster moving controls within their rows.
-3. **Grades · Hard:** gradebook table, assignment links, points, percentage cells, semester summary, narrower surfaces, and one checkpoint.
-4. **Calendar · Very hard:** November 2026 month grid, date numbers, events inside calendar cells, 48-pixel-wide event chips with six fast-moving targets, and one checkpoint.
+1. **Courses · Challenging:** six illustrated course cards in a normal two-row grid, course sidebar, reminders, upcoming assignments.
+2. **Assignments · Hard:** material and folder listings, due-date chips, submission buttons, faster moving controls within their rows.
+3. **Grades · Expert:** gradebook table, assignment links, points, percentage cells, semester summary, narrower surfaces.
+4. **Calendar · Extreme:** November 2026 month grid, date numbers, events inside calendar cells, 48-pixel-wide event chips with six fast-moving targets.
 
-All pages share the Schoology-style blue header with branding, Courses / Groups / Resources / Grades navigation, original SVG icons, a fictional student profile, and left and right sidebars. The interface fits Chromebook-sized windows with the top navigation and game controls visible. A compact game bar holds controls and checkpoint status.
+All pages share the Schoology-style blue header with branding, Courses / Groups / Resources / Grades navigation, original SVG icons, a fictional student profile, and left and right sidebars. The interface fits Chromebook-sized windows with the top navigation and game controls visible. A compact game bar holds controls and left/right key status.
 
 No enemies, attacks, damaging hazards, or disappearing platforms. Movement retains acceleration, friction, gravity, grounded-only jumps, and a fixed 120 Hz simulation driven by requestAnimationFrame. Moving surfaces carry the cursor horizontally and vertically. Read [visual references](docs/VISUAL_REFERENCES.md) for the public screenshot sources and research limitations.
 
@@ -42,9 +45,9 @@ npm run test:browser
 
 The game needs no package installation to play. Development dependencies provide Playwright. Start `npm start` before browser tests. Tests use `/usr/bin/chromium` by default; set `CHROMIUM_PATH` for another installed Chrome/Chromium executable.
 
-Physics tests verify acceleration/friction, grounded-only jumping, collision, checkpoint respawn/reset, moving-platform carry, and complete routes through all four webpages using only ordinary movement, jumps, and drops. The route planner is test-only and is never loaded by the game.
+Physics tests verify acceleration/friction, grounded-only jumping, collision, start-only respawns, two-key goal locking, key persistence/reset, moving-platform carry, and complete routes through all four webpages using only ordinary movement, jumps, and drops. The route planner is test-only and is never loaded by the game.
 
-Browser tests send real keyboard events through the production requestAnimationFrame loop under a virtual clock. They complete all four pages without falls, check automatic transitions and victory/replay, compare every collision surface with its rendered DOM rectangle, and verify that the player's feet touch the visible element after each landing. They also exercise intentional falls and checkpoint recovery, pause/resume/restart, header navigation, and responsive layouts at 1366×768, 1024×768, and 768×650. JavaScript errors fail the run. Screenshots are generated in ignored `test-results/`.
+Browser tests send real keyboard events through the production requestAnimationFrame loop under a virtual clock. They collect both off-map keys and finish all four pages, check automatic transitions and victory/replay, compare every collision surface with its rendered DOM rectangle, and verify that the player's feet touch the visible element after each landing. They also exercise intentional falls and key retention, pause/resume/restart, header navigation, and responsive layouts at 1366×768, 1024×768, and 768×650. JavaScript errors fail the run. Screenshots are generated in ignored `test-results/`.
 
 Production files: `index.html`, `style.css`, `game.js`, `pages.js`, `levels.js`, and `physics.js`. Deploy them together to any static host. `server.js` is the local development server. No existing deployment configuration was present; none was replaced.
 

@@ -1,6 +1,7 @@
 import { LEVELS } from './levels.js';
 
 const iconPaths = {
+  key: '<circle cx="7" cy="8" r="5"/><path d="m11 12 10 10m-3-3 3-3m-6 0 3-3"/>',
   search: '<circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/>',
   calendar: '<rect x="3" y="5" width="18" height="16" rx="1"/><path d="M3 10h18M8 2v6m8-6v6M7 14h2m3 0h2m3 0h1M7 18h2m3 0h2"/>',
   mail: '<rect x="2" y="5" width="20" height="15"/><path d="m2 5 10 8L22 5M2 20l7-8m13 8-7-8"/>',
@@ -34,7 +35,7 @@ function thumbnail(i) {
 }
 function surface(index, id, contents, className = '') {
   const p = LEVELS[index].platforms[id];
-  return `<div id="platform-${id}" class="surface ${className}${p.moving ? ' moving' : ''}" data-surface="${id}" style="left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px">${contents}${p.checkpoint ? '<span class="checkpoint-badge" title="Land here to save your checkpoint">⚑</span>' : ''}</div>`;
+  return `<div id="platform-${id}" class="surface ${className}${p.moving ? ' moving' : ''}" data-surface="${id}" style="left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px">${contents}</div>`;
 }
 function leftSidebar(index) {
   return `<aside class="left-sidebar">
@@ -44,8 +45,8 @@ function leftSidebar(index) {
     <div class="sidebar-rule"></div>
     ${[['home','Home',0],['folder',index===0?'Courses':'Materials',index===0?0:1],['document','Assignments',1],['chart','Grades',2],['calendar','Calendar',3],['people','Members',null]].map(([i,text,l])=>`<button class="sidebar-link ${l===index&&text!=='Home'&&!(index===1&&text==='Materials')?'selected':''}" ${l===null?'data-notice="Members are fictional in this game."':`data-level="${l}"`}>${icon(i)}${text}</button>`).join('')}
     <div class="sidebar-rule"></div><h3>COURSES</h3>${courses.slice(0,4).map((c,i)=>`<div class="sidebar-course"><span style="background:${colors[i]}"></span>${c}</div>`).join('')}
-    <div class="sidebar-rule"></div><div class="access-code"><b>Access Code</b><p>This is a fictional class.<br>No account is required.</p></div>
-    <div class="sidebar-footer">Schoology · English ▾<br>Privacy Policy · Terms of Use</div>
+    <div class="sidebar-rule"></div>
+
   </aside>`;
 }
 function rightSidebar(index) {
@@ -108,10 +109,10 @@ function calendarPage() {
   return `<div class="calendar-toolbar"><div><span class="small-button">‹</span><span class="small-button">Today</span><span class="small-button">›</span></div><h2>November 2026</h2><div><span class="small-button selected-view">Month</span><span class="small-button">Week</span><span class="small-button">Day</span></div></div>
     <div class="calendar-weekdays">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<span>${d}</span>`).join('')}</div>
     <div class="calendar-grid">${Array.from({length:35},(_,i)=>{const day=i+1;return `<div class="date-cell ${day===13?'today':''} ${day>30?'other-month':''}"><span class="date">${day>30?day-30:day}</span>${day===13?'<span class="today-label">TODAY</span>':''}${events[i]&&!(i in activeCells)?`<div class="calendar-event decorative-event">${events[i]}</div>`:''}${i===29?'<div class="calendar-event school-event">No school · Holiday</div>':''}</div>`;}).join('')}</div>
-    ${LEVELS[3].platforms.filter(p=>!p.goal).map(p=>surface(3,p.id,`<span>${['Reading','Practice','Lab report','Study group','Quiz review','Essay plan','Peer review','Project','Final draft','Assembly'][p.id]}</span>`,'calendar-event playable-event')).join('')}
+    ${LEVELS[3].platforms.filter(p=>!p.goal&&!p.edge).map(p=>surface(3,p.id,`<span>${['Reading','Practice','Lab report','Study group','Quiz review','Essay plan','Peer review','Project','Final draft','Assembly'][p.id]}</span>`,'calendar-event playable-event')).join('')}
     <div class="calendar-key"><span class="key-dot"></span>English Literature <span class="key-dot green"></span>School events <span class="key-dot purple"></span>Personal</div>
     ${surface(3,10,'Next Page →','next-page')}`;
 }
 export function renderPage(index) {
-  return `<div class="site-columns">${leftSidebar(index)}<main class="page-content page-${index}"></main>${rightSidebar(index)}</div>${pageHeading(index)}${[coursePage,assignmentsPage,gradesPage,calendarPage][index]()}`;
+  return `<div class="site-columns">${leftSidebar(index)}<main class="page-content page-${index}"></main>${rightSidebar(index)}</div>${pageHeading(index)}${[coursePage,assignmentsPage,gradesPage,calendarPage][index]()}${LEVELS[index].platforms.filter(p=>p.edge).map(p=>surface(index,p.id,p.edge==='left'?'← Personal resources':'Resources →','edge-launch')).join('')}<div class="edge-key left-key" data-key="left"><span>${icon('key')}</span><small>← JUMP OFF</small></div><div class="edge-key right-key" data-key="right"><span>${icon('key')}</span><small>JUMP OFF →</small></div>`;
 }

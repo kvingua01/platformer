@@ -4,7 +4,7 @@ export function planJump(state, target, simulate = tick) {
   for (const wait of [0,30,60,100,150,210,270]) {
     for (const strategy of ['jump','drop-right','drop-left']) {
       for (const margin of [30,12,45,5,0,-5,65]) {
-        const s = {...state, player:{...state.player},activated:new Set(state.activated),visited:new Set(state.visited)};
+        const s = {...state, player:{...state.player},keys:new Set(state.keys)};
         const actions=[];
         const step=input=>{actions.push(input);simulate(s,input);};
         for(let i=0;i<wait;i++)step({});
@@ -42,4 +42,18 @@ export function planJump(state, target, simulate = tick) {
     }
   }
   throw Error(`No normal-input route from ${state.player.ground} to ${target} in ${state.level.name}`);
+}
+
+export function collectKey(state, side, simulate = tick) {
+  const target=state.level.platforms.find(p=>p.edge===side).id;
+  const plan=planJump(state,target,simulate);
+  const s=plan.state;
+  let first=true;
+  for(let i=0;i<220&&!s.keys.has(side);i++) {
+    const action={left:side==='left',right:side==='right',jump:first};
+    first=false;plan.actions.push(action);simulate(s,action);
+    if(s.falls>state.falls)throw Error(`Failed ${side} key excursion`);
+  }
+  if(!s.keys.has(side))throw Error(`Did not collect ${side} key`);
+  return plan;
 }

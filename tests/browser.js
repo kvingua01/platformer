@@ -2,7 +2,7 @@ import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { createState,tick,STEP,HEIGHT,platformAt } from '../physics.js';
-import { ROUTES,planJump } from './route.js';
+import { ROUTES,planJump,collectKey } from './route.js';
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
 try {
   const page=await browser.newPage({viewport:{width:1366,height:768}});
@@ -43,35 +43,49 @@ try {
     });
     const model=createState(level);
     for(const rect of rectangles){const p=platformAt(model.level.platforms[rect.id],initial.time);assert(rect.text.length>0);for(const k of ['x','y','w','h'])assert(Math.abs(rect[k]-p[k])<.1,`DOM collision mismatch ${level}:${rect.id}:${k}`);}
-    for(const target of ROUTES[level]) {
-      const actual=await snapshot();const s=createState(level);
-      Object.assign(s,{time:actual.time,acc:actual.acc,checkpoint:actual.checkpoint,falls:actual.falls,visited:new Set(actual.visited),activated:new Set(actual.activated),player:{...actual.player}});
-      const plan=planJump(s,target,simulateFrame);
-      for(const action of plan.actions){await input(action);await page.clock.runFor(16);}
-      const landed=await snapshot();
-      assert.equal(landed.ground,target,`browser landing ${level}:${target}`);
-      assert.equal(landed.falls,0);
-      const p=await page.evaluate(id=>{const player=document.querySelector('#player').getBoundingClientRect();const surface=document.querySelector(`#platform-${id}`).getBoundingClientRect();return {foot:player.bottom,top:surface.top,left:player.left,right:player.right,sleft:surface.left,sright:surface.right};},target);
-      assert(Math.abs(p.foot-p.top)<.2,'cursor stands on the visible element');
-      assert(p.right>p.sleft&&p.left<p.sright);
-      if(landed.checkpoints>0&&target===ROUTES[level][Math.floor(ROUTES[level].length/2)])await page.screenshot({path:`test-results/checkpoint-${level+1}.png`});
+    assert.equal(await page.locator('.checkpoint-badge').count(),0);
+    async function currentModel(){
+      const actual=await snapshot(),s=createState(level);
+      Object.assign(s,{time:actual.time,acc:actual.acc,falls:actual.falls,keys:new Set(actual.collectedKeys),player:{...actual.player}});
+      return s;
     }
-    await input({});assert((await snapshot()).done);console.log(`Browser: ${model.level.name} completed with ${model.level.platforms.filter(p=>p.checkpoint).length} checkpoints and no falls.`);
+    async function run(plan){for(const action of plan.actions){await input(action);await page.clock.runFor(16);}}
+    await run(collectKey(await currentModel(),'left',simulateFrame));
+    assert.deepEqual((await snapshot()).collectedKeys,['left']);assert.equal((await snapshot()).ground,0);
+    if(level===0){
+      await input({left:true});
+      for(let f=0;f<300&&(await snapshot()).falls===0;f++)await page.clock.runFor(16);
+      await input({});assert.equal((await snapshot()).ground,0);assert.deepEqual((await snapshot()).collectedKeys,['left']);
+    }
+    for(let pass=0;pass<2;pass++){
+      for(const target of ROUTES[level]) {
+        const before=await snapshot();
+        await run(planJump(await currentModel(),target,simulateFrame));
+        const landed=await snapshot();
+        assert.equal(landed.ground,target,`browser landing ${level}:${target}`);
+        assert.equal(landed.falls,before.falls);
+        const p=await page.evaluate(id=>{const player=document.querySelector('#player').getBoundingClientRect();const surface=document.querySelector(`#platform-${id}`).getBoundingClientRect();return {foot:player.bottom,top:surface.top,left:player.left,right:player.right,sleft:surface.left,sright:surface.right};},target);
+        assert(Math.abs(p.foot-p.top)<.2,'cursor stands on the visible element');
+        assert(p.right>p.sleft&&p.left<p.sright);
+      }
+      if(pass===0){
+        assert.equal((await snapshot()).done,false);
+        await run(collectKey(await currentModel(),'right',simulateFrame));
+        assert.equal((await snapshot()).collectedKeys.length,2);assert.equal((await snapshot()).ground,0);
+      }
+    }
+    await input({});assert((await snapshot()).done);console.log(`Browser: ${model.level.name} completed after both off-map key jumps.`);
     await page.clock.runFor(1400);assert.equal((await snapshot()).mode,level===3?'victory':'play');
+    if(level<3)assert.deepEqual((await snapshot()).collectedKeys,[]);
   }
   await page.screenshot({path:'test-results/victory.png'});
   await page.getByRole('button',{name:'Play again →'}).click();assert.equal((await snapshot()).index,0);
-  const fresh=await snapshot(), recovery=createState(0);
+  const fresh=await snapshot(),recovery=createState(0);
   Object.assign(recovery,{time:fresh.time,acc:fresh.acc,player:{...fresh.player}});
-  let checkpointPlan=planJump(recovery,1,simulateFrame);
-  for(const t of [2,3]) { const next=planJump(checkpointPlan.state,t,simulateFrame);checkpointPlan={state:next.state,actions:[...checkpointPlan.actions,...next.actions]}; }
-  for(const action of checkpointPlan.actions){await input(action);await page.clock.runFor(16);}
-  await input({right:true});
-  for(let frame=0;frame<300&&(await snapshot()).falls===0;frame++)await page.clock.runFor(16);
-  await input({});const recovered=await snapshot();
-  assert.equal(recovered.falls,1);assert.equal(recovered.checkpoint,3);assert.equal(recovered.ground,3);
-  assert.equal(recovered.checkpoints,1);
-  await page.keyboard.press('r');assert.equal((await snapshot()).falls,0);
+  const keyPlan=collectKey(recovery,'left',simulateFrame);
+  for(const action of keyPlan.actions){await input(action);await page.clock.runFor(16);}
+  await input({});assert.deepEqual((await snapshot()).collectedKeys,['left']);
+  await page.keyboard.press('r');assert.equal((await snapshot()).falls,0);assert.deepEqual((await snapshot()).collectedKeys,[]);
   await page.locator('#courses-nav').click();await page.locator('[data-page="3"]').click();assert.equal((await snapshot()).index,3);
   for(const size of [{width:1366,height:768},{width:1024,height:768},{width:768,height:650}]){
     await page.setViewportSize(size);await page.waitForTimeout(100);await page.clock.runFor(32);
@@ -80,5 +94,5 @@ try {
     await page.screenshot({path:`test-results/calendar-${size.width}.png`});
   }
   assert.deepEqual(errors,[]);
-  console.log('PASS: real keyboard movement/jumps, DOM-to-physics alignment, checkpoints, all four auto-transitions, victory/replay, pause/restart, falls, navigation, responsive layouts, no JS errors.');
+  console.log('PASS: real keyboard movement/jumps, DOM-to-physics alignment, both off-map keys, start-only respawns, all four auto-transitions, victory/replay, pause/restart, falls, navigation, responsive layouts, no JS errors.');
 } finally { await browser.close(); }
