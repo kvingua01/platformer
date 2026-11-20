@@ -88,20 +88,31 @@ function assignmentsPage() {
     ${surface(1,7,'Next Page →','next-page')}`;
 }
 function gradesPage() {
-  return `<div class="page-tabs"><span class="active">Grades</span><span>Attendance</span><span class="tab-right">Download Student Report ↓</span></div>
-    <div class="grade-period"><span class="period-active">Current</span><span>Past</span><strong>English Literature: Period 1</strong><b>A− (92.8%)</b></div>
-    <div class="grade-table"><div class="grade-table-head"><span>Assignment</span><span>Points</span><span>Grade</span><span>Comments</span></div>
-    ${Array.from({length:7},(_,r)=>`<div class="grade-row"><span class="grade-title">${[0,4].includes(r)?'':titles[r]}</span><span>${[1,3,5].includes(r)?'':`${[19,18,24,28,20,9,25][r]} / ${[20,20,25,30,20,10,25][r]}`}</span><span class="grade-green">${[2,6].includes(r)?'':['95%','90%','96%','93%','100%','90%','100%'][r]}</span><span class="comment">${r%2?'—':'Good work'}</span></div>`).join('')}</div>
-    ${surface(2,0,'Reading response','grade-assignment')}
-    ${surface(2,1,'18 / 20','score-chip')}
-    ${surface(2,2,'A · 96%','grade-chip')}
-    ${surface(2,3,'28 / 30','score-chip')}
-    ${surface(2,4,'Perspective study','grade-assignment')}
-    ${surface(2,5,'9 / 10','score-chip')}
-    ${surface(2,6,'A · 100%','grade-chip')}
-    <div class="grade-summary"><span>Semester 1 <small>Overall course grade</small></span><strong>A− &nbsp; 92.8%</strong><small>163 / 175 points</small></div>
-    <div class="grading-note">ⓘ Grades are calculated using the total points earned in this grading period.</div>
-    ${surface(2,7,'Next Page →','next-page')}`;
+  const {height, platforms} = LEVELS[2];
+  const assignmentNames = [
+    'Reading journal', 'Chapter 6 response', 'Character study', 'Citation practice',
+    'Poetry annotation', 'Theme quiz', 'Close reading notes', 'Evidence log',
+    'Annotated bibliography', 'Revision worksheet', 'Peer feedback', 'Portfolio reflection',
+  ];
+  let assignment = 0;
+  const style = {
+    assignment: 'grade-assignment', score: 'score-chip', grade: 'grade-chip',
+    panel: 'grade-summary', goal: 'next-page',
+  };
+  return `<div id="grades-tower" style="height:${height}px">
+    ${pageHeading(2)}
+    <div class="gradebook-sheet">
+      <div class="gradebook-columns"><span>Assignment</span><span>Points</span><span>Grade</span><span>Comments</span></div>
+      ${platforms.filter(p=>!p.goal).map(p=>{
+        if (p.kind === 'panel') return `<div class="gradebook-row gradebook-unit" style="top:${p.y}px"></div>`;
+        const name = p.kind === 'assignment' ? '' : assignmentNames[assignment++];
+        return `<div class="gradebook-row" style="top:${p.y}px"><span>${name}</span><small>${p.moving ? 'Updated' : 'Graded'}</small></div>`;
+      }).join('')}
+    </div>
+    ${platforms.map(p=>surface(2,p.id,
+      p.checkpoint ? `<span>${p.label}<small class="checkpoint-badge">Checkpoint</small></span>` : p.label,
+      style[p.kind])).join('')}
+  </div>`;
 }
 function calendarPage() {
   const events={0:'Reading response',2:'Math practice',4:'Library visit',8:'Lab report',10:'Study group',12:'Art portfolio',14:'Peer review',16:'Essay outline',18:'Quiz review',20:'Office hours',23:'Group project',25:'Final draft',27:'School assembly'};
@@ -114,7 +125,10 @@ function calendarPage() {
     ${surface(3,10,'Next Page →','next-page')}`;
 }
 export function renderPage(index) {
-  return `<div class="site-columns">${leftSidebar(index)}<main class="page-content page-${index}"></main>${rightSidebar(index)}</div>${pageHeading(index)}${[coursePage,assignmentsPage,gradesPage,calendarPage][index]()}${LEVELS[index].platforms.filter(p=>p.edge).map(p=>surface(index,p.id,p.edge==='left'?'← Personal resources':'Resources →','edge-launch')).join('')}<div class="edge-key left-key" data-key="left"><span>${icon('key')}</span><small>← ROOM</small></div><div class="edge-key right-key" data-key="right"><span>${icon('key')}</span><small>ROOM →</small></div>`;
+  if (index === 2) {
+    return `<div class="site-columns">${leftSidebar(index)}<main class="page-content">${gradesPage()}</main>${rightSidebar(index)}</div>`;
+  }
+  return `<div class="site-columns">${leftSidebar(index)}<main class="page-content page-${index}"></main>${rightSidebar(index)}</div>${pageHeading(index)}${[coursePage,assignmentsPage,null,calendarPage][index]()}${LEVELS[index].platforms.filter(p=>p.edge).map(p=>surface(index,p.id,p.edge==='left'?'← Personal resources':'Resources →','edge-launch')).join('')}<div class="edge-key left-key" data-key="left"><span>${icon('key')}</span><small>← ROOM</small></div><div class="edge-key right-key" data-key="right"><span>${icon('key')}</span><small>ROOM →</small></div>`;
 }
 
 export function renderRoom(index,side) {

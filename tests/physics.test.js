@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {LEVELS,createState,tick,platformAt,HEIGHT,respawn} from '../physics.js';
+import {LEVELS,createState,tick,platformAt,HEIGHT,WIDTH} from '../physics.js';
 import {ROUTES,planJump,collectKey} from './route.js';
 function advance(s,input,n){for(let j=0;j<n;j++)tick(s,input);}
 test('acceleration, friction, grounded-only jumping and landing',()=>{
@@ -13,7 +13,7 @@ test('all falls return to the beginning; keys persist until restart',()=>{
   const s=createState();s.keys.add('left');s.player.y=800;tick(s,{});
   assert.equal(s.falls,1);assert.equal(s.player.ground,0);assert(s.keys.has('left'));
   assert.equal(createState().keys.size,0);
-  assert(LEVELS.every(l=>l.platforms.every(p=>!p.checkpoint)));
+  assert(LEVELS.filter(l=>!l.height).every(l=>l.platforms.every(p=>!p.checkpoint)));
 });
 test('walking off an edge does not grant a jump key',()=>{
   const s=createState();Object.assign(s.player,{x:-30,y:300,ground:null,jumped:false});tick(s,{});
@@ -30,7 +30,7 @@ test('Next Page requires both different keys',()=>{
   land();assert(!s.done);s.keys.add('left');land();assert(!s.done);
   s.keys.add('left');land();assert(!s.done);s.keys.add('right');land();assert(s.done);
 });
-for(let index=0;index<4;index++)test(`${LEVELS[index].name}: jump off both edges and finish using normal inputs`,()=>{
+for(const index of [0,1,3])test(`${LEVELS[index].name}: jump off both edges and finish using normal inputs`,()=>{
   let s=collectKey(createState(index),'left').state;assert.equal(s.player.ground,0);
   for(const target of ROUTES[index])s=planJump(s,target).state;
   assert(!s.done);s=collectKey(s,'right').state;
@@ -47,4 +47,42 @@ test('entering a side room gives no key and falling there returns to page start'
   s.player.y=800;tick(s,{});
   assert.equal(s.room,null);assert.equal(s.level,s.pageLevel);assert.equal(s.player.ground,0);
   assert.equal(s.falls,1);assert.deepEqual([...s.keys],['right']);
+});
+
+test('Grades: every platform is reachable with normal inputs and the goal needs no keys',()=>{
+  let s=createState(2);
+  for(const p of s.level.platforms.slice(1)){
+    s=planJump(s,p.id).state;
+    assert.equal(s.player.ground,p.id);
+    if(p.checkpoint)assert.equal(s.checkpoint,p.id);
+  }
+  assert(s.done);
+  assert.equal(s.keys.size,0);
+  assert.equal(s.falls,0);
+});
+
+test('Grades: walls, lower landings, and full falls preserve the highest checkpoint',()=>{
+  let s=createState(2);
+  for(const p of s.level.platforms.slice(1,6))s=planJump(s,p.id).state;
+  const height=s.level.height;
+  for(const [x,input,bound] of [[-2,{left:true},0],[s.level.length,{right:true},s.level.length-WIDTH]]){
+    Object.assign(s.player,{x,y:100,ground:null,jumped:true});
+    advance(s,input,8);
+    assert.equal(s.player.x,bound);
+    assert.equal(s.room,null);
+    assert.equal(s.falls,0);
+  }
+
+  const low=s.level.platforms[0];
+  Object.assign(s.player,{x:low.x+30,y:low.y-HEIGHT-10,vy:0,ground:null});
+  advance(s,{},20);
+  assert.equal(s.player.ground,0);
+  assert.equal(s.checkpoint,5);
+  assert.equal(s.falls,0);
+
+  Object.assign(s.player,{x:0,y:height,vy:0,ground:null});
+  advance(s,{},40);
+  assert.equal(s.player.ground,5);
+  assert.equal(s.falls,1);
+  assert.equal(createState(2).checkpoint,0);
 });

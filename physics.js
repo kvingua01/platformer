@@ -11,7 +11,7 @@ export function createState(index = 0) {
   return {
     index, level, pageLevel: level, room: null, time: 0,
     player: { x: first.x + 30, y: first.y - HEIGHT, vx: 0, vy: 0, ground: 0 },
-    keys: new Set(), falls: 0, done: false,
+    keys: new Set(), falls: 0, done: false, checkpoint: 0,
   };
 }
 export function enterRoom(s,side) {
@@ -20,11 +20,14 @@ export function enterRoom(s,side) {
 export function leaveRoom(s) {
   s.room=null;s.level=s.pageLevel;spawn(s);
 }
-function spawn(s) {
-  const p=platformAt(s.level.platforms[0],s.time);
-  Object.assign(s.player,{x:p.x+p.w/2-WIDTH/2,y:p.y-HEIGHT,vx:0,vy:0,ground:0,jumped:false});
+function spawn(s, id = 0) {
+  const p=platformAt(s.level.platforms[id],s.time);
+  Object.assign(s.player,{x:p.x+p.w/2-WIDTH/2,y:p.y-HEIGHT,vx:0,vy:0,ground:id,jumped:false});
 }
-export function respawn(s) { leaveRoom(s); }
+export function respawn(s) {
+  if (s.level.height) spawn(s, s.checkpoint);
+  else leaveRoom(s);
+}
 export function tick(s, input, dt = STEP) {
   if (s.done) return;
   const a = s.player, oldTime = s.time;
@@ -41,6 +44,11 @@ export function tick(s, input, dt = STEP) {
   const previousY = a.y;
   a.vy += 1450 * dt;
   a.x += a.vx * dt;
+  if (s.level.height) {
+    const boundedX = Math.max(0, Math.min(s.level.length - WIDTH, a.x));
+    if (boundedX !== a.x) a.vx = 0;
+    a.x = boundedX;
+  }
   a.y += a.vy * dt;
   a.ground = null;
   for (const base of s.level.platforms) {
@@ -50,7 +58,8 @@ export function tick(s, input, dt = STEP) {
       if (p.roomKey && s.room) {
         s.keys.add(s.room);leaveRoom(s);return;
       }
-      if (p.goal && s.keys.size === 2) s.done = true;
+      if (p.checkpoint && p.id > s.checkpoint) s.checkpoint = p.id;
+      if (p.goal && (s.level.height || s.keys.size === 2)) s.done = true;
       break;
     }
   }
@@ -59,5 +68,5 @@ export function tick(s, input, dt = STEP) {
     if (!s.room && a.jumped) enterRoom(s,side);
     else {s.falls++;respawn(s);}
   }
-  if (a.y > SCENE_HEIGHT + 36) { s.falls++; respawn(s); }
+  if (a.y > (s.level.height ?? SCENE_HEIGHT) + 36) { s.falls++; respawn(s); }
 }

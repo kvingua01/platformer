@@ -1,5 +1,5 @@
 import { tick, platformAt, WIDTH, HEIGHT } from '../physics.js';
-export const ROUTES = [[1,2,3,4,5,4,3,6,7],[1,2,3,4,3,5,6,7],[1,2,1,3,4,3,5,6,7],[1,2,3,2,4,5,6,5,7,8,9,10]];
+export const ROUTES = [[1,2,3,4,5,4,3,6,7],[1,2,3,4,3,5,6,7],null,[1,2,3,2,4,5,6,5,7,8,9,10]];
 export function planJump(state, target, simulate = tick) {
   for (const wait of [0,30,60,100,150,210,270]) {
     for (const strategy of ['jump','drop-right','drop-left']) {

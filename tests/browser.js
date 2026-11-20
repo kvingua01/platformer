@@ -51,15 +51,16 @@ try {
     const initial=await snapshot();assert.equal(initial.index,level);
     // Each collision rectangle must be the actual visible HTML element, not a hidden platform.
     const rectangles=await page.evaluate(()=>{
-      const scene=document.querySelector('#scene').getBoundingClientRect();const scale=scene.width/1280;
+      const scene=(document.querySelector('#grades-tower')??document.querySelector('#scene')).getBoundingClientRect();const scale=scene.width/1280;
       return [...document.querySelectorAll('[data-surface]')].map(el=>{const r=el.getBoundingClientRect();return {id:Number(el.dataset.surface),x:(r.x-scene.x)/scale,y:(r.y-scene.y)/scale,w:r.width/scale,h:r.height/scale,text:el.textContent.trim()};});
     });
     const model=createState(level);
+    assert.equal(rectangles.length,model.level.platforms.length);
     for(const rect of rectangles){const p=platformAt(model.level.platforms[rect.id],initial.time);assert(rect.text.length>0);for(const k of ['x','y','w','h'])assert(Math.abs(rect[k]-p[k])<.1,`DOM collision mismatch ${level}:${rect.id}:${k}`);}
-    assert.equal(await page.locator('.checkpoint-badge').count(),0);
+    assert.equal(await page.locator('.checkpoint-badge').count(),level===2?3:0);
     async function currentModel(){
       const actual=await snapshot(),s=createState(level);
-      Object.assign(s,{time:actual.time,acc:actual.acc,falls:actual.falls,keys:new Set(actual.collectedKeys),player:{...actual.player}});
+      Object.assign(s,{time:actual.time,acc:actual.acc,falls:actual.falls,checkpoint:actual.checkpoint,keys:new Set(actual.collectedKeys),player:{...actual.player}});
       return s;
     }
     async function run(plan){
@@ -71,6 +72,70 @@ try {
           await page.screenshot({path:`test-results/room-${level+1}-${plan.roomSide}.png`});
         }
       }
+    }
+    if(level===2){
+      const watchCamera=async()=>{
+        const actual=await snapshot();
+        const offset=await page.locator('#grades-tower').evaluate(el=>{
+          const transform=new DOMMatrixReadOnly(getComputedStyle(el).transform);
+          return {x:transform.m41,y:transform.m42};
+        });
+        assert.equal(offset.x,0,'Grades never scrolls horizontally');
+        assert(Math.abs(offset.y+actual.camera)<.01);
+        return actual;
+      };
+      const startCamera=(await watchCamera()).camera;
+      let lastCamera=startCamera,sawUp=false,sawDown=false;
+      for(const target of model.level.platforms.slice(1)){
+        const plan=planJump(await currentModel(),target.id,simulateFrame);
+        for(const action of plan.actions){
+          await input(action);await page.clock.runFor(16);
+          const {camera}=await snapshot();
+          assert(Math.abs(camera-lastCamera)<60,'camera eases between climbing frames');
+          sawUp ||= camera<lastCamera-.5;
+          lastCamera=camera;
+        }
+        const landed=await watchCamera();
+        assert.equal(landed.ground,target.id);
+        const aligned=await page.locator(`#platform-${target.id}`).evaluate(el=>{
+          const platform=el.getBoundingClientRect();
+          const player=document.querySelector('#player').getBoundingClientRect();
+          return Math.abs(platform.top-player.bottom)<.2&&player.left<platform.right&&player.right>platform.left;
+        });
+        assert(aligned,`visible platform matches Grades landing ${target.id}`);
+        assert.equal(landed.falls,target.id>=6?1:0);
+        if(target.checkpoint)assert.equal(landed.checkpoint,target.id);
+        if(target.id===5){
+          // Run off the checkpoint into the empty left margin, then keep steering into the wall.
+          await input({left:true});
+          for(let f=0;f<150&&(await snapshot()).falls===0;f++){
+            await page.clock.runFor(16);
+            const current=await watchCamera();
+            assert(current.x>=0&&current.room===null);
+            sawDown ||= current.camera>lastCamera+.5;
+            lastCamera=current.camera;
+          }
+          await input({});
+          const recovered=await snapshot();
+          assert.equal(recovered.falls,1);
+          assert.equal(recovered.ground,5);
+          assert.equal(recovered.checkpoint,5);
+          await page.clock.runFor(512);
+          lastCamera=(await watchCamera()).camera;
+          await page.screenshot({path:'test-results/grades-checkpoint.png'});
+        }
+      }
+      assert(sawUp&&sawDown);
+      assert(lastCamera<startCamera-1000);
+      const finished=await snapshot();
+      assert(finished.done&&finished.mode==='complete');
+      assert.deepEqual(finished.collectedKeys,[]);
+      await page.screenshot({path:'test-results/grades-complete.png'});
+      await page.clock.runFor(1400);
+      assert.equal((await snapshot()).index,3);
+      assert.equal((await snapshot()).camera,0);
+      console.log('Browser: Grades climbed every platform, respawned at a checkpoint, and transitioned to Calendar.');
+      continue;
     }
     await run(collectKey(await currentModel(),'left',simulateFrame));
     assert.deepEqual((await snapshot()).collectedKeys,['left']);assert.equal((await snapshot()).ground,0);
@@ -115,6 +180,20 @@ try {
     assert.deepEqual(fits,{width:true,header:true,bottom:true});
     await page.screenshot({path:`test-results/calendar-${size.width}.png`});
   }
+  await page.locator('header [data-level="2"]').click();
+  for(const size of [{width:1366,height:768},{width:1024,height:768},{width:768,height:650}]){
+    await page.setViewportSize(size);await page.waitForTimeout(100);await page.clock.runFor(32);
+    const fits=await page.evaluate(()=>{
+      const viewport=document.querySelector('#viewport').getBoundingClientRect();
+      const player=document.querySelector('#player').getBoundingClientRect();
+      return viewport.left>=0&&viewport.right<=innerWidth&&player.top>=viewport.top&&player.bottom<=viewport.bottom
+        &&document.querySelector('.game-bar').getBoundingClientRect().bottom<=innerHeight;
+    });
+    assert(fits,`Grades fits ${size.width}×${size.height}`);
+    await page.screenshot({path:`test-results/grades-${size.width}.png`});
+  }
+  await page.keyboard.press('r');
+  assert.equal((await snapshot()).checkpoint,0);
   assert.deepEqual(errors,[]);
-  console.log('PASS: real keyboard movement/jumps, DOM-to-physics alignment, all eight side rooms, far-end keys, start-only respawns, all four auto-transitions, victory/replay, pause/restart, falls, navigation, responsive layouts, no JS errors.');
+  console.log('PASS: real keyboard movement/jumps, DOM-to-physics alignment, all six side rooms and the Grades climb, far-end keys, start-only respawns, all four auto-transitions, victory/replay, pause/restart, falls, navigation, responsive layouts, no JS errors.');
 } finally { await browser.close(); }
