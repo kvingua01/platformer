@@ -128,15 +128,39 @@ export function renderPage(index) {
   if (index === 2) {
     return `<div class="site-columns">${leftSidebar(index)}<main class="page-content">${gradesPage()}</main>${rightSidebar(index)}</div>`;
   }
-  return `<div class="site-columns">${leftSidebar(index)}<main class="page-content page-${index}"></main>${rightSidebar(index)}</div>${pageHeading(index)}${[coursePage,assignmentsPage,null,calendarPage][index]()}${LEVELS[index].platforms.filter(p=>p.edge).map(p=>surface(index,p.id,p.edge==='left'?'← Personal resources':'Resources →','edge-launch')).join('')}<div class="edge-key left-key" data-key="left"><span>${icon('key')}</span><small>← ROOM</small></div><div class="edge-key right-key" data-key="right"><span>${icon('key')}</span><small>ROOM →</small></div>`;
+  const exits = LEVELS[index].platforms.filter(p=>p.edge).map(p=>{
+    const left = p.edge === 'left';
+    const label = left ? 'Personal resources' : 'Resources';
+    const link = `${icon('folder')}<span>${label}</span><span class="edge-arrow" aria-hidden="true">${left ? '←' : '→'}</span>`;
+    return surface(index,p.id,link,`edge-launch edge-launch-${p.edge}`) +
+      `<div class="edge-key ${p.edge}-key" data-key="${p.edge}">${icon('key')}<span>Key room</span></div>`;
+  }).join('');
+  return `<div class="site-columns">${leftSidebar(index)}<main class="page-content page-${index}"></main>${rightSidebar(index)}</div>${pageHeading(index)}${[coursePage,assignmentsPage,null,calendarPage][index]()}${exits}`;
 }
 
-export function renderRoom(index,side) {
-  const room=ROOMS[index][side];
-  return `<div class="resource-room ${side}">
-    <div class="room-heading"><div class="breadcrumb">Resources › ${LEVELS[index].name} › ${side==='left'?'Left':'Right'} room</div><h1>${side==='left'?'Left':'Right'} resource room</h1><p>Parkour ${side==='left'?'← left':'right →'} to the key vault. A fall returns you to the page start. No checkpoints.</p><button class="small-button" data-leave-room>Back to page</button></div>
-    <div class="room-file-path">PERSONAL RESOURCES <span>6 folders · ${LEVELS[index].difficulty}</span></div>
-    ${room.platforms.map(p=>`<div id="platform-${p.id}" data-surface="${p.id}" class="surface room-platform ${p.moving?'moving':''} ${p.roomKey?'key-vault':''}" style="left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px">${p.roomKey?`<div class="vault-key">${icon('key')}</div>`:icon('folder')}<span>${['Entrance','Shared files','Study notes','Practice','Archive','Key vault'][p.id]}</span></div>`).join('')}
-    <div class="room-tip">${side==='left'?'←':'→'} The key is at the far end — entering the room does not collect it.</div>
-  </div>`;
+export function renderRoom(index, side) {
+  const room = ROOMS[index][side];
+  const left = side === 'left';
+  const library = left ? 'Personal resources' : 'School resources';
+  const names = ['Start folder', 'Shared files', 'Study notes', 'Practice', 'Archive', 'Key vault'];
+  return `<main class="resource-room">
+    <div class="room-heading">
+      <div class="breadcrumb">Resources › ${LEVELS[index].name}</div>
+      <h1>${library}</h1>
+      <button class="small-button" data-leave-room>Back to page</button>
+    </div>
+    <section class="room-library" aria-labelledby="room-folders">
+      <div class="room-library-tabs"><h2 id="room-folders">Folders</h2></div>
+      <div class="room-file-path">${icon('folder')} <strong>${library}</strong><span>6 folders</span></div>
+      <div class="room-library-guide">
+        <strong>${left ? '← Start on the right' : 'Start on the left →'}</strong>
+        <span>Jump from folder to folder to collect the key. A fall returns you to the page start.</span>
+      </div>
+      <div class="room-library-label">Folder name</div>
+      ${room.platforms.map(p=>`<div class="room-library-row" style="top:${p.y}px" aria-hidden="true"></div>`).join('')}
+    </section>
+    ${room.platforms.map(p=>`<div id="platform-${p.id}" data-surface="${p.id}" class="surface room-platform ${p.moving?'moving':''} ${p.roomKey?'key-vault':''}" style="left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px">
+      ${icon(p.roomKey ? 'key' : 'folder')}<span>${names[p.id]}</span>
+    </div>`).join('')}
+  </main>`;
 }

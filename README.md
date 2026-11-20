@@ -17,7 +17,7 @@ Open `http://localhost:3000`. Set `PORT` to use another port. Any static HTTP se
 - **R:** restart the page, clearing progress and falls
 - **Esc:** pause / resume
 
-Courses, Assignments, and Calendar each have **two separate parkour rooms**, one entered by jumping beyond its left edge and one beyond its right edge. Reach the **Personal resources** ledge at the lower left or the **Resources** ledge at the lower right, then jump outward. The golden room indicators point to the entrances. Walking off without jumping does not enter a room.
+Courses, Assignments, and Calendar each have **two separate parkour rooms**, one entered by jumping beyond its left edge and one beyond its right edge. Reach the **Personal resources** ledge at the lower left or the **Resources** ledge at the lower right, then jump outward. The Key room labels and arrows mark the entrances. Walking off without jumping does not enter a room.
 
 Inside the **left room**, parkour from right to left; inside the **right room**, travel left to right. Each room contains six resource platforms, and its key is in the vault at the far end. Entering a room grants nothing. Later rooms have narrower platforms and moving targets. All six rooms have tested normal-input routes.
 
@@ -35,7 +35,7 @@ Page elements are one-way surfaces: jump through their undersides and stand on t
 3. **Grades · Expert:** a 6,300-pixel vertical gradebook with Calendar-sized moving platforms and checkpoints across three sections.
 4. **Calendar · Extreme:** November 2026 month grid, date numbers, events inside calendar cells, 48-pixel-wide event chips with six fast-moving targets.
 
-All pages share the Schoology-style blue header with branding, Courses / Groups / Resources / Grades navigation, original SVG icons, a fictional student profile, and left and right sidebars. The interface fits Chromebook-sized windows with the top navigation and game controls visible. A compact game bar shows the controls and the current keys or Grades checkpoint.
+All pages share the Schoology-inspired white header with branding, Courses / Groups / Resources / Grades navigation, original SVG icons, a fictional student profile, and left and right sidebars. The interface fits Chromebook-sized windows with the top navigation and game controls visible. A compact game bar shows the controls and the current keys or Grades checkpoint.
 
 No enemies, attacks, damaging hazards, or disappearing platforms. Movement retains acceleration, friction, gravity, grounded-only jumps, and a fixed 120 Hz simulation driven by requestAnimationFrame. Moving surfaces carry the cursor horizontally and vertically. Read [visual references](docs/VISUAL_REFERENCES.md) for the public screenshot sources and research limitations.
 

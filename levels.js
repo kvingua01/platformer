@@ -31,38 +31,44 @@ const targetWidths = [
 ];
 // Gradebook rows are listed in climbing order, from the semester summary up.
 const gradesPlatforms = [
-  [404, 2048, 166, 'panel', 'Semester 1 · 92.8%'],
-  [558, 1958, 106, 'score', '19 / 20'],
-  [709, 1868, 76, 'grade', 'A · 96%'],
-  [562, 1776, 82, 'score', '27 / 30'],
-  [402, 1686, 138, 'assignment', 'Reading response'],
-  [524, 1592, 188, 'panel', 'Unit 1 · Close reading'],
-  [723, 1500, 68, 'grade', 'A · 95%'],
-  [578, 1406, 66, 'score', '14 / 15'],
-  [409, 1315, 126, 'assignment', 'Poetry analysis'],
-  [556, 1221, 74, 'score', '23 / 25'],
-  [704, 1131, 86, 'grade', 'A− · 92%'],
-  [518, 1038, 190, 'panel', 'Unit 2 · Analysis'],
-  [390, 946, 135, 'assignment', 'Perspective study'],
-  [554, 852, 78, 'score', '17 / 20'],
-  [702, 758, 72, 'grade', 'B+ · 89%'],
-  [568, 665, 80, 'score', '24 / 25'],
-  [402, 572, 144, 'assignment', 'Comparative essay'],
-  [527, 478, 186, 'panel', 'Unit 3 · Composition'],
-  [714, 386, 80, 'grade', 'A · 98%'],
-  [571, 293, 70, 'score', '29 / 30'],
-  [413, 200, 125, 'assignment', 'Final portfolio'],
-  [550, 110, 138, 'goal', 'Next Page →'],
+  [2048, 'panel', 'Semester 1 · 92.8%'],
+  [1958, 'score', '19 / 20'],
+  [1868, 'grade', 'A · 96%'],
+  [1776, 'score', '27 / 30'],
+  [1686, 'assignment', 'Reading response'],
+  [1592, 'panel', 'Unit 1 · Close reading'],
+  [1500, 'grade', 'A · 95%'],
+  [1406, 'score', '14 / 15'],
+  [1315, 'assignment', 'Poetry analysis'],
+  [1221, 'score', '23 / 25'],
+  [1131, 'grade', 'A− · 92%'],
+  [1038, 'panel', 'Unit 2 · Analysis'],
+  [946, 'assignment', 'Perspective study'],
+  [852, 'score', '17 / 20'],
+  [758, 'grade', 'B+ · 89%'],
+  [665, 'score', '24 / 25'],
+  [572, 'assignment', 'Comparative essay'],
+  [478, 'panel', 'Unit 3 · Composition'],
+  [386, 'grade', 'A · 98%'],
+  [293, 'score', '29 / 30'],
+  [200, 'assignment', 'Final portfolio'],
+  [110, 'goal', 'Next Page →'],
+];
+// Distinct routes for the three terms, including near-vertical jumps and reversals.
+const gradesPlatformCenters = [
+  [487, 572, 655, 645, 553, 618, 719, 676, 576, 477, 494, 596, 696, 738, 661, 552, 584, 505, 463, 563, 657, 642],
+  [570, 465, 515, 622, 714, 692, 761, 679, 572, 584, 493, 454, 551, 641, 632, 539, 611, 713, 764, 701, 601, 502],
+  [518, 623, 573, 470, 461, 548, 650, 748, 706, 719, 619, 528, 557, 479, 560, 672, 662, 748, 664, 560, 509, 595],
 ];
 const gradesSectionHeight = 2100;
 const gradesSections = 3;
-const gradesSectionStride = gradesPlatforms[0][1] - gradesPlatforms.at(-1)[1] + 92;
+const gradesSectionStride = gradesPlatforms[0][0] - gradesPlatforms.at(-1)[0] + 92;
 const grades = {
   name: 'Grades', difficulty: 'Expert', length: SCENE_WIDTH,
   height: gradesSectionHeight * gradesSections,
   platforms: Array.from({length: gradesSections}, (_, section) =>
-    gradesPlatforms.map(([x, y, w, kind, label]) => ({
-      x: x + (w - calendarPlatform.w) / 2,
+    gradesPlatforms.map(([y, kind, label], row) => ({
+      x: gradesPlatformCenters[section][row] - calendarPlatform.w / 2,
       y: y + (gradesSections - 1) * gradesSectionHeight - section * gradesSectionStride,
       kind: kind === 'goal' && section < gradesSections - 1 ? 'panel' : kind,
       label: kind === 'goal' && section < gradesSections - 1 ? `Term ${section + 1} complete` : label,
