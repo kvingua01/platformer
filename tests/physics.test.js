@@ -51,7 +51,17 @@ test('entering a side room gives no key and falling there returns to page start'
 
 test('Grades: every platform is reachable with normal inputs and the goal needs no keys',()=>{
   let s=createState(2);
+  const calendar=LEVELS[3].platforms.find(p=>p.moving);
+  assert.equal(s.level.height,6300);
   for(const p of s.level.platforms.slice(1)){
+    assert.equal(p.w,calendar.w);
+    assert.equal(p.h,calendar.h);
+    if(!p.goal){
+      assert(p.moving);
+      assert.equal(p.axis,calendar.axis);
+      assert.equal(p.amplitude,calendar.amplitude);
+      assert.equal(p.speed,calendar.speed);
+    }
     s=planJump(s,p.id).state;
     assert.equal(s.player.ground,p.id);
     if(p.checkpoint)assert.equal(s.checkpoint,p.id);

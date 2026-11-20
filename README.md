@@ -32,7 +32,7 @@ Page elements are one-way surfaces: jump through their undersides and stand on t
 
 1. **Courses · Challenging:** six illustrated course cards in a normal two-row grid, course sidebar, reminders, upcoming assignments.
 2. **Assignments · Hard:** material and folder listings, due-date chips, submission buttons, faster moving controls within their rows.
-3. **Grades · Expert:** a vertical gradebook with moving grade cells, narrow jumps, and three unit checkpoints.
+3. **Grades · Expert:** a 6,300-pixel vertical gradebook with Calendar-sized moving platforms and checkpoints across three sections.
 4. **Calendar · Extreme:** November 2026 month grid, date numbers, events inside calendar cells, 48-pixel-wide event chips with six fast-moving targets.
 
 All pages share the Schoology-style blue header with branding, Courses / Groups / Resources / Grades navigation, original SVG icons, a fictional student profile, and left and right sidebars. The interface fits Chromebook-sized windows with the top navigation and game controls visible. A compact game bar shows the controls and the current keys or Grades checkpoint.

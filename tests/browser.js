@@ -57,7 +57,7 @@ try {
     const model=createState(level);
     assert.equal(rectangles.length,model.level.platforms.length);
     for(const rect of rectangles){const p=platformAt(model.level.platforms[rect.id],initial.time);assert(rect.text.length>0);for(const k of ['x','y','w','h'])assert(Math.abs(rect[k]-p[k])<.1,`DOM collision mismatch ${level}:${rect.id}:${k}`);}
-    assert.equal(await page.locator('.checkpoint-badge').count(),level===2?3:0);
+    assert.equal(await page.locator('.checkpoint-badge').count(),model.level.platforms.filter(p=>p.checkpoint).length);
     async function currentModel(){
       const actual=await snapshot(),s=createState(level);
       Object.assign(s,{time:actual.time,acc:actual.acc,falls:actual.falls,checkpoint:actual.checkpoint,keys:new Set(actual.collectedKeys),player:{...actual.player}});

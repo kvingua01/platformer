@@ -105,12 +105,12 @@ function gradesPage() {
       <div class="gradebook-columns"><span>Assignment</span><span>Points</span><span>Grade</span><span>Comments</span></div>
       ${platforms.filter(p=>!p.goal).map(p=>{
         if (p.kind === 'panel') return `<div class="gradebook-row gradebook-unit" style="top:${p.y}px"></div>`;
-        const name = p.kind === 'assignment' ? '' : assignmentNames[assignment++];
+        const name = p.kind === 'assignment' ? '' : assignmentNames[assignment++ % assignmentNames.length];
         return `<div class="gradebook-row" style="top:${p.y}px"><span>${name}</span><small>${p.moving ? 'Updated' : 'Graded'}</small></div>`;
       }).join('')}
     </div>
     ${platforms.map(p=>surface(2,p.id,
-      p.checkpoint ? `<span>${p.label}<small class="checkpoint-badge">Checkpoint</small></span>` : p.label,
+      `<span${p.checkpoint ? ' class="checkpoint-badge"' : ''} title="${p.label}${p.checkpoint ? ' · Checkpoint' : ''}">${p.goal ? 'Next Page' : p.checkpoint ? '◆ Save' : p.label}</span>`,
       style[p.kind])).join('')}
   </div>`;
 }

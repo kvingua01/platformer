@@ -22,43 +22,55 @@ const surfaces = [
   ],
 ];
 // Keep normal website grids, but create meaningful gaps and precision targets.
+const calendarPlatform = { w: 48, h: 27, axis: 'x', amplitude: 22, speed: 2.7 };
 const targetWidths = [
   [180,180,180,180,180,180,110,110],
   [160,82,92,82,110,72,92,110],
   null,
-  [48,48,48,48,48,48,48,48,48,48,90],
+  [...Array(10).fill(calendarPlatform.w),90],
 ];
 // Gradebook rows are listed in climbing order, from the semester summary up.
 const gradesPlatforms = [
   [404, 2048, 166, 'panel', 'Semester 1 · 92.8%'],
   [558, 1958, 106, 'score', '19 / 20'],
   [709, 1868, 76, 'grade', 'A · 96%'],
-  [562, 1776, 82, 'score', '27 / 30', 16],
+  [562, 1776, 82, 'score', '27 / 30'],
   [402, 1686, 138, 'assignment', 'Reading response'],
   [524, 1592, 188, 'panel', 'Unit 1 · Close reading'],
   [723, 1500, 68, 'grade', 'A · 95%'],
   [578, 1406, 66, 'score', '14 / 15'],
   [409, 1315, 126, 'assignment', 'Poetry analysis'],
-  [556, 1221, 74, 'score', '23 / 25', 18],
+  [556, 1221, 74, 'score', '23 / 25'],
   [704, 1131, 86, 'grade', 'A− · 92%'],
   [518, 1038, 190, 'panel', 'Unit 2 · Analysis'],
   [390, 946, 135, 'assignment', 'Perspective study'],
   [554, 852, 78, 'score', '17 / 20'],
-  [702, 758, 72, 'grade', 'B+ · 89%', 18],
+  [702, 758, 72, 'grade', 'B+ · 89%'],
   [568, 665, 80, 'score', '24 / 25'],
   [402, 572, 144, 'assignment', 'Comparative essay'],
   [527, 478, 186, 'panel', 'Unit 3 · Composition'],
   [714, 386, 80, 'grade', 'A · 98%'],
-  [571, 293, 70, 'score', '29 / 30', 16],
+  [571, 293, 70, 'score', '29 / 30'],
   [413, 200, 125, 'assignment', 'Final portfolio'],
   [550, 110, 138, 'goal', 'Next Page →'],
 ];
+const gradesSectionHeight = 2100;
+const gradesSections = 3;
+const gradesSectionStride = gradesPlatforms[0][1] - gradesPlatforms.at(-1)[1] + 92;
 const grades = {
-  name: 'Grades', difficulty: 'Expert', length: SCENE_WIDTH, height: 2100,
-  platforms: gradesPlatforms.map(([x, y, w, kind, label, amplitude = 0], id) => ({
-    id, x, y, w, h: kind === 'panel' ? 40 : 30, kind, label,
+  name: 'Grades', difficulty: 'Expert', length: SCENE_WIDTH,
+  height: gradesSectionHeight * gradesSections,
+  platforms: Array.from({length: gradesSections}, (_, section) =>
+    gradesPlatforms.map(([x, y, w, kind, label]) => ({
+      x: x + (w - calendarPlatform.w) / 2,
+      y: y + (gradesSections - 1) * gradesSectionHeight - section * gradesSectionStride,
+      kind: kind === 'goal' && section < gradesSections - 1 ? 'panel' : kind,
+      label: kind === 'goal' && section < gradesSections - 1 ? `Term ${section + 1} complete` : label,
+    })),
+  ).flat().map(({x, y, kind, label}, id) => ({
+    ...calendarPlatform, id, x, y, kind, label,
     goal: kind === 'goal', checkpoint: kind === 'panel' && id !== 0,
-    moving: amplitude > 0, axis: 'x', amplitude, speed: 2.1, phase: id,
+    moving: id !== 0 && kind !== 'goal', phase: id,
   })),
 };
 
@@ -69,11 +81,12 @@ export const LEVELS = ['Courses', 'Assignments', 'Grades', 'Calendar'].map((name
     difficulty: ['Challenging', 'Hard', 'Expert', 'Extreme'][index],
     length: SCENE_WIDTH,
     platforms: surfaces[index].map(([x, y, w, h], id, all) => ({
-      id, x: x + (w-targetWidths[index][id])/2, y, w: targetWidths[index][id], h,
+      id, x: x + (w-targetWidths[index][id])/2, y, w: targetWidths[index][id],
+      h: index === 3 && id !== all.length - 1 ? calendarPlatform.h : h,
       goal: id === all.length - 1,
       // Submission/score chips and calendar event chips move inside their cells.
       moving: index > 0 && (index === 3 ? [1,2,4,5,8,9] : [2,5]).includes(id),
-      axis: 'x', amplitude: [0,14,18,22][index], speed: [1.5,1.9,2.3,2.7][index], phase: id,
+      axis: 'x', amplitude: index === 3 ? calendarPlatform.amplitude : [0,14][index], speed: index === 3 ? calendarPlatform.speed : [1.5,1.9][index], phase: id,
     })).concat([
       {id: surfaces[index].length, x: 35, y: 650, w: 145, h: 30, edge: 'left'},
       {id: surfaces[index].length + 1, x: 1120, y: 680, w: 125, h: 30, edge: 'right'},
