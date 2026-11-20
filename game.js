@@ -2,14 +2,13 @@ import {LEVELS,createState,tick,platformAt,STEP,leaveRoom} from './physics.js';
 import {SCENE_WIDTH, SCENE_HEIGHT} from './levels.js';
 import {renderPage, renderRoom, icon} from './pages.js';
 const $=s=>document.querySelector(s), world=$('#world'),player=$('#player'),overlay=$('#overlay');
-let state=createState(),mode='start',acc=0,last=0,scale=1,camera=0,transitionTimer=null;const keys=new Set();const jumpKeys=[' ','w','arrowup'];let renderedRoom='page';let jumpQueued=false;let previousGround=0;
+let state=createState(),mode='start',acc=0,last=0,scale=1,camera=0,transitionTimer=null;const keys=new Set();const jumpKeys=[' ','w','arrowup'];let renderedRoom='page';let jumpQueued=false;
 const colors=['#5c8daa','#718f78','#b39a71','#8293b6','#af8c99','#749da0','#9c91b5','#778b9c'];
 function modal(kind){mode=kind;keys.clear();jumpQueued=false;overlay.classList.remove('hidden');const content={start:['<svg viewBox="0 0 40 40" width="30" height="30" style="vertical-align:middle" aria-hidden="true"><path d="M10 4v28l8-8 6 12 5-3-6-11h12z" fill="white" stroke="#327caa" stroke-width="2"/></svg>','WELCOME TO YOUR SCHOOL DAY','A new way to navigate.','Jump off each page edge to enter a separate parkour room. Reach the key vault at the far end of BOTH rooms. Collecting a key returns you to the page start. Falls also return you to the start, but you keep collected keys. Both keys unlock Next Page. Grades is a vertical climb with checkpoints.','Let’s play →'],pause:['Ⅱ','TAKE YOUR TIME','Class is on a break.','Your cursor is right where you left it. Ready for the next jump?','Resume →'],help:['⌨','THE SHORT COURSE','Make every jump count.',state.level.height?'A / D or ← / → to move. Space, W, or ↑ to jump. Hold to jump again when you land. Climb to Next Page. Land on a checkpoint panel to save your height. R restarts the climb. Esc pauses.':'A / D or ← / → to move. Space, W, or ↑ to jump. Hold to jump again when you land. R restarts the level; Esc pauses. Jump off each side to enter a parkour room. The key is at the far end of each room. Both keys unlock Next Page. Falls return you to the start; keys stay collected. R clears keys. No checkpoints.','Got it →'],complete:['✓','PAGE COMPLETED',`${state.level.name}, complete.`,'Nice work! Your next page is loading…',''],victory:['✦','SCHOOL DAY COMPLETE','You made the grade.','Four pages. A whole lot of jumps. You navigated the entire school day — one little cursor at a time.','Play again →']}[kind];overlay.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-label="${content[2]}"><div class="modal-icon">${content[0]}</div><div class="eyebrow">${content[1]}</div><h2>${content[2]}</h2><p>${content[3]}</p>${content[4]?`<button class="primary" id="modal-action">${content[4]}</button>`:''}${kind==='pause'?'<button class="text-button" id="restart">Restart this level</button>':''}<div class="sub">${kind==='start'?'A / D to move &nbsp; · &nbsp; Space to jump &nbsp; · &nbsp; No login needed':kind==='victory'?'Thanks for taking the scenic route.':'R to restart · Esc to pause · Unofficial offline game'}</div></div>`;$('#modal-action')?.addEventListener('click',()=>{if(kind==='victory')load(0);play();});$('#restart')?.addEventListener('click',()=>{load(state.index);play();});$('#modal-action')?.focus();}
 function play(){$('#nav-popover').hidden=true;mode='play';overlay.classList.add('hidden');$('#pause span').textContent='Pause';$('#viewport').focus();}
 function load(index) {
   clearTimeout(transitionTimer);
   state = createState(index);
-  previousGround = state.player.ground;
   camera = state.level.height ? state.level.height - SCENE_HEIGHT : 0;
   $('#particles').replaceChildren();
   world.innerHTML = renderPage(index);renderedRoom='page';
@@ -42,10 +41,6 @@ function render() {
   if (tower) tower.style.transform = `translateY(${-camera}px)`;
   $('#particles').style.transform = tower ? `translateY(${-camera}px)` : '';
   const a = state.player;
-  if (previousGround === null && a.ground !== null) {
-    player.classList.remove('landed'); void player.offsetWidth; player.classList.add('landed');
-  }
-  previousGround = a.ground;
   state.level.platforms.forEach(p => {
     const el = $(`#platform-${p.id}`), position = platformAt(p, state.time);
     el.style.transform = `translate(${position.x-p.x}px,${position.y-p.y}px)`;
@@ -58,8 +53,6 @@ function render() {
     el.classList.toggle('landing', a.ground === p.id);
   });
   player.style.left = a.x+'px'; player.style.top = (a.y-camera)+'px';
-  player.classList.toggle('walking', Math.abs(a.vx)>25 && a.ground!==null && mode==='play');
-  player.classList.toggle('airborne', a.ground===null);
   $('#key-stat').textContent = tower
     ? (state.checkpoint ? `${state.level.platforms[state.checkpoint].label} checkpoint` : 'Climb to Next Page')
     : `Keys ${state.keys.size}/2 · ${state.keys.has('left')?'✓':'←'} Left · ${state.keys.has('right')?'✓':'→'} Right`;
