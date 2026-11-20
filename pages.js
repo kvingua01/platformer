@@ -143,6 +143,8 @@ export function renderRoom(index, side) {
   const left = side === 'left';
   const library = left ? 'Personal resources' : 'School resources';
   const names = ['Start folder', 'Shared files', 'Study notes', 'Practice', 'Archive', 'Key vault'];
+  const featuredFolders = ['Class handouts', 'Reading lists', 'Assignment guides', 'Study resources'];
+  const archivedFolders = ['Class notes', 'Reference', 'Examples', 'Worksheets', 'Past units', 'Review'];
   return `<main class="resource-room">
     <div class="room-heading">
       <div class="breadcrumb">Resources › ${LEVELS[index].name}</div>
@@ -151,14 +153,25 @@ export function renderRoom(index, side) {
     </div>
     <section class="room-library" aria-labelledby="room-folders">
       <div class="room-library-tabs"><h2 id="room-folders">Folders</h2></div>
-      <div class="room-file-path">${icon('folder')} <strong>${library}</strong><span>6 folders</span></div>
+      <aside class="room-library-sidebar">
+        <span class="sidebar-link selected">${icon('folder')}${library}</span>
+        <span class="sidebar-link">${icon('people')}Shared with me</span>
+        <span class="sidebar-link">${icon('document')}Recent files</span>
+      </aside>
+      <div class="room-file-path">${icon('folder')} <strong>${library}</strong><span>${room.platforms.length + featuredFolders.length + archivedFolders.length} folders</span></div>
       <div class="room-library-guide">
         <strong>${left ? '← Start on the right' : 'Start on the left →'}</strong>
-        <span>Jump from folder to folder to collect the key. A fall returns you to the page start.</span>
+        <span>Jump on the outlined folders to collect the key. A fall returns you to the page start.</span>
       </div>
       <div class="room-library-label">Folder name</div>
+      <div class="room-featured-folders">
+        ${featuredFolders.map(name=>`<div class="room-folder-preview">${icon('folder')}<span>${name}</span></div>`).join('')}
+      </div>
       ${room.platforms.map(p=>`<div class="room-library-row" style="top:${p.y}px" aria-hidden="true"></div>`).join('')}
     </section>
+    ${room.platforms.map(p=>`<div class="room-folder-preview room-archive-folder" style="left:${p.x}px;top:${p.y+p.h+12}px;width:${p.w}px">
+      ${icon('folder')}<span>${archivedFolders[p.id]}</span>
+    </div>`).join('')}
     ${room.platforms.map(p=>`<div id="platform-${p.id}" data-surface="${p.id}" class="surface room-platform ${p.moving?'moving':''} ${p.roomKey?'key-vault':''}" style="left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px">
       ${icon(p.roomKey ? 'key' : 'folder')}<span>${names[p.id]}</span>
     </div>`).join('')}

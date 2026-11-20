@@ -119,3 +119,13 @@ a, .link { color: #327caa; text-decoration: none; }
 .room-platform .icon { width: 13px; height: 13px; }
 .room-platform span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .key-vault { border-color: #bc973c; background: #fff6d9; color: #725213; }
+
+.room-library-sidebar { position: absolute; top: 137px; left: 1px; width: 176px; height: 260px; padding: 15px 12px; background: #f7f9fa; border-right: 1px solid #dce5eb; }
+.room-library-sidebar .sidebar-link { width: 100%; margin: 0; gap: 7px; font-size: 11px; }
+.room-library-sidebar .sidebar-link .icon { width: 15px; height: 15px; }
+.room-file-path, .room-library-guide, .room-library-label { left: 177px; }
+.room-featured-folders { position: absolute; top: 273px; left: 194px; right: 17px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.room-folder-preview { display: flex; align-items: center; gap: 5px; min-width: 0; padding: 8px; border: 1px solid #e3eaf0; border-radius: 3px; background: #f4f7fa; color: #4c667a; font-size: 11px; pointer-events: none; }
+.room-folder-preview .icon { width: 14px; height: 14px; color: #648399; }
+.room-folder-preview span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.room-archive-folder { position: absolute; padding: 4px 3px; font-size: 10px; }
