@@ -21,6 +21,19 @@ try {
   await page.keyboard.press('Escape');const paused=await snapshot();await page.clock.runFor(300);
   assert.deepEqual((await snapshot()).player,paused.player);
   await page.getByRole('button',{name:'Resume →'}).click();await page.keyboard.press('r');await page.clock.runFor(32);
+  await page.keyboard.down('ArrowUp');
+  let takeoffs=0,previousVy=0;
+  for(let frame=0;frame<180&&takeoffs<2;frame++){
+    await page.clock.runFor(8);
+    const {vy}=(await snapshot()).player;
+    if(previousVy>=0&&vy<0)takeoffs++;
+    previousVy=vy;
+  }
+  await page.keyboard.up('ArrowUp');
+  assert.equal(takeoffs,2,'holding Up jumps again after landing');
+  await page.clock.runFor(1600);
+  assert.equal((await snapshot()).ground,0,'releasing Up lets the player stay grounded');
+  await page.keyboard.press('r');await page.clock.runFor(32);
   let held=new Set();
   async function input(keys) {
     const next=new Set([keys.left?'a':'',keys.right?'d':''].filter(Boolean));

@@ -13,7 +13,7 @@ npm start
 Open `http://localhost:3000`. Set `PORT` to use another port. Any static HTTP server can also serve the production files; opening `index.html` directly is not supported because the game uses JavaScript modules.
 
 - **A / D or Left / Right:** move
-- **Space / W / Up:** jump while grounded
+- **Space / W / Up:** jump while grounded (hold to jump again on landing)
 - **R:** restart the page, clearing keys and falls
 - **Esc:** pause / resume
 
